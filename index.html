@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>逃离化学</title>
+  <title>逃离鸭科夫</title>
 
-  <!-- external css -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -21,16 +20,29 @@
   </main>
 
   <script>
-    document.getElementById("menu").addEventListener("click", () => {
-      console.log("continue...");
-      // 之後你可以換成：
-      // location.href = "game.html";
-      // 或顯示遊戲容器
-    });
+    const menu = document.getElementById("menu");
+    let isFading = false;
+
+    function continueGame() {
+      if (isFading) return;
+      isFading = true;
+
+      menu.classList.add("fade-out");
+
+      // 等淡出動畫結束
+      setTimeout(() => {
+        console.log("进入游戏");
+        // 之后你可以换成：
+        // location.href = "game.html";
+        // 或显示游戏容器
+      }, 600);
+    }
+
+    menu.addEventListener("click", continueGame);
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
-        document.getElementById("menu").click();
+        continueGame();
       }
     });
   </script>
