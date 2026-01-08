@@ -1,3 +1,27 @@
+const startScreen = document.getElementById("start-screen");
+const mainMenu = document.getElementById("main-menu");
+
+if (startScreen && mainMenu) {
+  const enterMenu = () => {
+    if (startScreen.classList.contains("fade-out")) return;
+
+    startScreen.classList.add("fade-out");
+
+    setTimeout(() => {
+      startScreen.style.display = "none";
+      mainMenu.classList.remove("is-hidden");
+    }, 600);
+  };
+
+  startScreen.addEventListener("click", enterMenu);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") enterMenu();
+  });
+} else {
+  // 如果没有开始画面，就确保主菜单可见
+  if (mainMenu) mainMenu.classList.remove("is-hidden");
+}
 document.getElementById("btn-continue").onclick = () => console.log("继续游戏");
 document.getElementById("btn-save").onclick = () => alert("这里以后做存档选择");
 document.getElementById("btn-new").onclick = () => alert("这里以后做新游戏");
