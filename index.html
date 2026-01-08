@@ -4,47 +4,77 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>逃离鸭科夫</title>
-
   <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-  <main id="menu">
-    <div class="wrap">
-      <div class="title-row">
-        <div class="title-vert">逃离</div>
-        <div class="title-hori">化学卷</div>
-      </div>
-      <div class="hint">点击屏幕继续</div>
-    </div>
+  <div class="bg"></div>
+
+  <main class="screen">
+    <section class="left-menu" aria-label="主菜单">
+      <button id="btn-continue" class="menu-btn menu-btn--green menu-btn--big">
+        <img class="icon-img" src="images/ui/icon_play.png" alt="">
+        <span class="label">继续游戏</span>
+      </button>
+
+      <button id="btn-save" class="menu-btn menu-btn--blue">
+        <img class="icon-img" src="images/ui/icon_save.png" alt="">
+        <span class="label">存档槽位：1</span>
+        <span class="sub">均衡</span>
+      </button>
+
+      <button id="btn-wipe" class="menu-btn menu-btn--red">
+        <img class="icon-img" src="images/ui/icon_trash.png" alt="">
+        <span class="label">长按清除存档数据</span>
+        <span class="holdbar" aria-hidden="true"></span>
+      </button>
+
+      <button id="btn-new" class="menu-btn menu-btn--blue">
+        <img class="icon-img" src="images/ui/icon_new.png" alt="">
+        <span class="label">新游戏</span>
+      </button>
+
+      <button id="btn-settings" class="menu-btn menu-btn--blue">
+        <img class="icon-img" src="images/ui/icon_settings.png" alt="">
+        <span class="label">设置</span>
+      </button>
+
+      <button id="btn-credits" class="menu-btn menu-btn--blue">
+        <img class="icon-img" src="images/ui/icon_credits.png" alt="">
+        <span class="label">制作人员</span>
+      </button>
+
+      <button id="btn-exit" class="menu-btn menu-btn--blue">
+        <img class="icon-img" src="images/ui/icon_exit.png" alt="">
+        <span class="label">退出游戏</span>
+      </button>
+    </section>
   </main>
 
-  <script>
-    const menu = document.getElementById("menu");
-    let isFading = false;
+  <!-- 设置弹窗（真的可用） -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal__panel" role="dialog" aria-label="设置">
+      <div class="modal__title">设置</div>
 
-    function continueGame() {
-      if (isFading) return;
-      isFading = true;
+      <div class="row">
+        <div class="row__label">音量</div>
+        <input id="vol" class="slider" type="range" min="0" max="100" value="70">
+        <div id="volv" class="row__value">70</div>
+      </div>
 
-      menu.classList.add("fade-out");
+      <div class="row">
+        <div class="row__label">全屏</div>
+        <button id="fs" class="mini-btn">切换</button>
+      </div>
 
-      // 等淡出動畫結束
-      setTimeout(() => {
-        console.log("进入游戏");
-        // 之后你可以换成：
-        // location.href = "game.html";
-        // 或显示游戏容器
-      }, 600);
-    }
+      <div class="modal__actions">
+        <button id="close" class="mini-btn mini-btn--ghost">关闭</button>
+      </div>
+    </div>
+    <div class="modal__backdrop"></div>
+  </div>
 
-    menu.addEventListener("click", continueGame);
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        continueGame();
-      }
-    });
-  </script>
+  <!-- 外部 JS -->
+  <script src="js/main.js"></script>
 </body>
 </html>
