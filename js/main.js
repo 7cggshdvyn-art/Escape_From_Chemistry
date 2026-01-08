@@ -1,11 +1,10 @@
-// ====== 假功能（你之后接真实逻辑）======
 document.getElementById("btn-continue").onclick = () => console.log("继续游戏");
 document.getElementById("btn-save").onclick = () => alert("这里以后做存档选择");
 document.getElementById("btn-new").onclick = () => alert("这里以后做新游戏");
 document.getElementById("btn-credits").onclick = () => alert("这里以后做制作人员");
 document.getElementById("btn-exit").onclick = () => alert("网页版通常用返回/关闭标签页，这里先占位");
 
-// ====== 设置：真的能打开/关闭 ======
+// ====== 设置 ======
 const modal = document.getElementById("modal");
 const openSettings = () => {
   modal.classList.add("is-open");
