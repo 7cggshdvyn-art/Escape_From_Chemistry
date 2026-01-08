@@ -6,16 +6,25 @@ html, body {
 body {
   background: #0b0f14;
   color: #e9eef6;
-  font-family: system-ui, -apple-system, "Noto Sans TC",
-               "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-family: system-ui, -apple-system, "Noto Sans SC",
+               "PingFang SC", "Microsoft YaHei", sans-serif;
   user-select: none;
 }
 
+/* 主菜单 */
 #menu {
   height: 100%;
   display: grid;
   place-items: center;
   cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+/* 淡出状态 */
+#menu.fade-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .wrap {
