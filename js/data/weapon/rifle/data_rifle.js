@@ -34,7 +34,7 @@ const rifle = [
         horizontal: 54        
       }
     }
-  }
+  },
   {
     id: "AK-47",
     name: "AK-47",
@@ -70,7 +70,7 @@ const rifle = [
         horizontal: 54        
       }
     }
-  }
+  },
 ];
 
 export default rifle;
