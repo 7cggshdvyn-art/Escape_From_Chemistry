@@ -77,6 +77,83 @@ const rifle = [
       }
     }
   },
-];
+  {
+    id: "ADAR 2-15",
+    name: "ADAR 2-15",
+
+    base: {
+      gameId: 652,
+      price: 1633,
+      weight: 2.879,        
+      quality: 2,
+      tags: ["枪械", "武器", "步枪", "可维修"],
+
+      description: "制式武器的民用版本，虽然威力较低，但有着优秀的稳定性和更好的配件支持。"
+    },
+
+    stats: {
+      caliber: "AR",          
+      durability: 100,        
+      damage: 12,            
+      fireRate: 13.5,          
+      reloadTime: 2.7,          
+      bulletSpeed: 105,       
+      range: 25.6,              
+
+      critMultiplier: 1.25,  
+      soundRange: 29.9,       
+      aimTime: 0.5,          
+
+      moveSpeedCoef: 0.85,    
+      explosiveDamageCoef: 1, 
+
+      hipSpread: 39,       
+      aimSpread: 9.72,       
+
+      recoil: {
+        vertical: 40.5,      
+        horizontal: 45        
+      }
+    }
+  },
+  {
+    id: "AS Val",
+    name: "AS Val",
+
+    base: {
+      gameId: 681,
+      price: 10648,
+      weight: 2.5,        
+      quality: 5,
+      tags: ["枪械", "武器", "步枪", "可维修"],
+
+      description: "自带消音器的特种步枪，射速快，精度高但载弹量有限。"
+    },
+
+    stats: {
+      caliber: "AR",          
+      durability: 100,        
+      damage: 12,            
+      fireRate: 18,          
+      reloadTime: 3,          
+      bulletSpeed: 85,       
+      range: 21.8,              
+
+      critMultiplier: 1.2,  
+      soundRange: 7.8,       
+      aimTime: 0.5,          
+
+      moveSpeedCoef: 0.85,    
+      explosiveDamageCoef: 1, 
+
+      hipSpread: 33,       
+      aimSpread: 10.64,       
+
+      recoil: {
+        vertical: 30.15,      
+        horizontal: 27        
+      }
+    }
+  },
 
 export default rifle;
