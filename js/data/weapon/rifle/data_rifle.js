@@ -8,6 +8,9 @@ const rifle = [
       price: 3550,
       weight: 4.3,        
       quality: 3,
+      tags: ["枪械", "武器", "步枪", "可维修"],
+
+      description: "经典的制式步枪，威力较大，结构简单，维护方便，但后坐力较大，精度一般。"
     },
 
     stats: {
@@ -44,6 +47,9 @@ const rifle = [
       price: 3550,
       weight: 4.3,        
       quality: 3,
+      tags: ["枪械", "武器", "步枪", "可维修"],
+
+      description: "经典的制式步枪，威力较大，结构简单，维护方便，但后坐力较大，精度一般。"
     },
 
     stats: {
