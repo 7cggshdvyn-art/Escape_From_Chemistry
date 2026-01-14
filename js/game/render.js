@@ -63,7 +63,7 @@ export function renderFrame(player) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // 背景（先随便填一个暗色，之后你可以换成地图）
-  ctx.fillStyle = "#0b0f14";
+  ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // 画玩家（箭头图：指向鼠标）
@@ -79,6 +79,8 @@ export function renderFrame(player) {
     // atan2: 0 表示向右，符合你的初始朝向需求
     angle = Math.atan2(dy, dx);
   }
+  // 记住最后一次朝向（鼠标不动/离开后也保持）
+  player.angle = angle;
 
   if (ready) {
     const w = 48;
