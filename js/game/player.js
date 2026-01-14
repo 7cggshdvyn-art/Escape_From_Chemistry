@@ -5,9 +5,9 @@ export const player = {
   y: 100,
   speed: 3,
   update() {
-    if (keys.ArrowUp) this.y -= this.speed;
-    if (keys.ArrowDown) this.y += this.speed;
-    if (keys.ArrowLeft) this.x -= this.speed;
-    if (keys.ArrowRight) this.x += this.speed;
+    if (keys.up) this.y -= this.speed;
+    if (keys.down) this.y += this.speed;
+    if (keys.left) this.x -= this.speed;
+    if (keys.right) this.x += this.speed;
   },
 };
