@@ -3,19 +3,18 @@ let canvas, ctx;
 let arrowImg;
 let ready = false;
 
-// 鼠标坐标（相对 canvas）
+// 鼠标坐标
 let mouseX = 0;
 let mouseY = 0;
 let hasMouse = false;
 
-// 你把箭头图片放到这个路径（你之后自己改也行）
+// 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
 
 export function initRender() {
   // 找 canvas
   canvas = document.getElementById("game-canvas");
 
-  // 如果你还没放 canvas，我这里会直接报错提示
   if (!canvas) {
     console.error('找不到 <canvas id="game-canvas">，请先把 canvas 加到 index.html 里');
     return;
