@@ -25,9 +25,9 @@ const character = [
     },
 
     movement: {
-      walkSpeed: 4.0,     // M/S
+      walkSpeed: 4.0,     // m/s
       runSpeed: 7.8,
-      
+      rollDistance: 3.0,   // m
     },
 
 
