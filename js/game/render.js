@@ -41,17 +41,12 @@ export function initRender() {
   // 显示画布（如果你一开始隐藏它）
   canvas.style.display = "block";
 
-  // 记录鼠标位置（相对 canvas）
-  canvas.addEventListener("mousemove", (e) => {
+  // 记录鼠标位置（相对 canvas）——用 window 监听，避免被菜单层挡住拿不到 mousemove
+  window.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
     hasMouse = true;
-  });
-
-  // 鼠标离开画布时，不更新角度（保持最后一次朝向）
-  canvas.addEventListener("mouseleave", () => {
-    hasMouse = false;
   });
 }
 
