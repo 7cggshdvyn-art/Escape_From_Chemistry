@@ -1,3 +1,5 @@
+import { startGame } from "./game/game.js";
+console.log("main module loaded");
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (id) => document.getElementById(id);
 
@@ -34,7 +36,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ====== 按钮（占位逻辑，之后你再接真实功能）======
   const btnContinue = $("btn-continue");
-  if (btnContinue) btnContinue.addEventListener("click", () => console.log("继续游戏"));
+  if (btnContinue) {
+    btnContinue.addEventListener("click", () => {
+      console.log("进入游戏");
+      startGame();
+    });
+  }
 
   const btnSave = $("btn-save");
   if (btnSave) btnSave.addEventListener("click", () => alert("这里以后做存档选择"));
