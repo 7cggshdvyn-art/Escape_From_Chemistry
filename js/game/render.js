@@ -15,7 +15,7 @@ let hasMouse = false;
 // 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
 
-const CROSSHAIR_SRC = "images/on-go/aim-cross.png";
+const CROSSHAIR_SRC = "images/ui/on-go/aim-cross.png";
 
 export function initRender() {
   // 找 canvas
@@ -122,7 +122,7 @@ export function renderFrame(player) {
 
     ctx.restore();
   }
-  
+
   // ===== 射击可视化（临时：激光线，后坐力之后再加） =====
   if (!isUIFocus() && hasMouse) {
     ctx.save();
