@@ -6,6 +6,16 @@ export const keys = {
   right: false,
 };
 
+// ===== 鼠标显示 / 隐藏控制 =====
+let cursorVisible = false; // 初始隐藏鼠标
+
+function updateCursor() {
+  document.body.style.cursor = cursorVisible ? "default" : "none";
+}
+
+// 初始化时隐藏鼠标
+updateCursor();
+
 // 把各种键名统一映射成 up/down/left/right
 function mapKeyToDir(key) {
   // WASD
@@ -24,6 +34,14 @@ function mapKeyToDir(key) {
 }
 
 window.addEventListener("keydown", (e) => {
+    // ESC：切换鼠标显示 / 隐藏
+  if (e.key === "Escape") {
+    cursorVisible = !cursorVisible;
+    updateCursor();
+    e.preventDefault();
+    return;
+  }
+
   const dir = mapKeyToDir(e.key);
   if (!dir) return;
 
@@ -45,4 +63,8 @@ window.addEventListener("keyup", (e) => {
 // 切出网页时清空按键（避免卡键）
 window.addEventListener("blur", () => {
   keys.up = keys.down = keys.left = keys.right = false;
+
+  // 切出网页时强制显示鼠标，避免找不到
+  cursorVisible = true;
+  updateCursor();
 });
