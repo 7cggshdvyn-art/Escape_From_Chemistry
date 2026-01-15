@@ -3,6 +3,7 @@ import { initRender, renderFrame } from "./render.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
 import { isUIFocus } from "./input.js";
 
+
 let running = false;
 
 // ===== Rifle system (shared by all rifles) =====
