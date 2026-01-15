@@ -6,6 +6,7 @@ let arrowReady = false;
 let crosshairImg;
 let crosshairReady = false;
 
+
 // 鼠标坐标
 let mouseX = 0;
 let mouseY = 0;
