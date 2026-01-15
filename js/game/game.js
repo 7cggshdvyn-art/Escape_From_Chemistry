@@ -1,6 +1,6 @@
 import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
-import rifleData from "../data/data_rifle.js";
+import rifleData from "../data/weapon/rifle/data_rifle.js";
 import { isUIFocus } from "./input.js";
 
 let running = false;
