@@ -122,6 +122,7 @@ export function renderFrame(player) {
 
     ctx.restore();
   }
+  
   // ===== 射击可视化（临时：激光线，后坐力之后再加） =====
   if (!isUIFocus() && hasMouse) {
     ctx.save();
