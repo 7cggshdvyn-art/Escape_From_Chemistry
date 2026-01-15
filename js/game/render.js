@@ -1,5 +1,4 @@
 import { isUIFocus } from "./input.js";
-import { lastShotVisualAt, SHOT_FLASH_DURATION } from "./game.js";
 let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
@@ -73,7 +72,11 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 
-export function renderFrame(player) {
+export function renderFrame(player, fireVisual = {}) {
+  const {
+    lastShotVisualAt = 0,
+    SHOT_FLASH_DURATION = 0
+  } = fireVisual;
   if (!ctx) return;
 
   // 清画面

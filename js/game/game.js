@@ -135,7 +135,10 @@ function loop() {
   tryFire(player, now);
 
   // 每帧渲染（把玩家画出来）
-  renderFrame(player);
+  renderFrame(player, {
+    lastShotVisualAt,
+    SHOT_FLASH_DURATION
+  });
 
   requestAnimationFrame(loop);
 }
