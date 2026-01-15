@@ -1,7 +1,10 @@
 // js/game/render.js
 let canvas, ctx;
 let arrowImg;
-let ready = false;
+let arrowReady = false;
+
+let crosshairImg;
+let crosshairReady = false;
 
 // 鼠标坐标
 let mouseX = 0;
@@ -10,6 +13,8 @@ let hasMouse = false;
 
 // 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
+
+const CROSSHAIR_SRC = "images/on-go/aim-cross.png";
 
 export function initRender() {
   // 找 canvas
@@ -30,11 +35,22 @@ export function initRender() {
   arrowImg = new Image();
   arrowImg.src = ARROW_SRC;
   arrowImg.onload = () => {
-    ready = true;
+    arrowReady = true;
     console.log("arrow image loaded:", ARROW_SRC);
   };
   arrowImg.onerror = () => {
     console.error("箭头图片加载失败，检查路径：", ARROW_SRC);
+  };
+
+  // 载入准星图片
+  crosshairImg = new Image();
+  crosshairImg.src = CROSSHAIR_SRC;
+  crosshairImg.onload = () => {
+    crosshairReady = true;
+    console.log("crosshair image loaded:", CROSSHAIR_SRC);
+  };
+  crosshairImg.onerror = () => {
+    console.error("准星图片加载失败，检查路径：", CROSSHAIR_SRC);
   };
 
   // 显示画布（如果你一开始隐藏它）
@@ -81,7 +97,7 @@ export function renderFrame(player) {
   // 记住最后一次朝向（鼠标不动/离开后也保持）
   player.angle = angle;
 
-  if (ready) {
+  if (arrowReady) {
     const w = 48;
     const h = 48;
 
@@ -104,5 +120,29 @@ export function renderFrame(player) {
     ctx.fillRect(-10, -10, 20, 20);
 
     ctx.restore();
+  }
+  // 画准星：跟着鼠标位置（相对 canvas 的 screen 坐标）
+  if (hasMouse) {
+    const cw = 32;
+    const ch = 32;
+
+    if (crosshairReady) {
+      ctx.save();
+      // 以中心点绘制准星
+      ctx.drawImage(crosshairImg, mouseX - cw / 2, mouseY - ch / 2, cw, ch);
+      ctx.restore();
+    } else {
+      // 图片还没加载好，先画个十字占位
+      ctx.save();
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(mouseX - 10, mouseY);
+      ctx.lineTo(mouseX + 10, mouseY);
+      ctx.moveTo(mouseX, mouseY - 10);
+      ctx.lineTo(mouseX, mouseY + 10);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 }
