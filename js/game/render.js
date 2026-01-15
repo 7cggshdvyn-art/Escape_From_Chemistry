@@ -49,9 +49,9 @@ export function initRender() {
     crosshairReady = true;
     console.log("crosshair image loaded:", CROSSHAIR_SRC);
   };
-  crosshairImg.onerror = () => {
-    console.error("准星图片加载失败，检查路径：", CROSSHAIR_SRC);
-  };
+  // crosshairImg.onerror = () => {
+  //   console.error("准星图片加载失败，检查路径：", CROSSHAIR_SRC);
+  // };
 
   // 显示画布（如果你一开始隐藏它）
   canvas.style.display = "block";
