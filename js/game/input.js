@@ -6,6 +6,30 @@ export const keys = {
   right: false,
 };
 
+// ===== UI / 暂停状态 =====
+let uiFocus = false; // true = 选单/ESC状态，角色不可移动
+
+export function isUIFocus() {
+  return uiFocus;
+}
+
+export function setUIFocus(state) {
+  uiFocus = state;
+
+  // 进入 UI 时：清空移动键，避免松不开
+  if (uiFocus) {
+    keys.up = keys.down = keys.left = keys.right = false;
+  }
+
+  // UI 时显示鼠标，游戏时隐藏鼠标
+  cursorVisible = uiFocus;
+  updateCursor();
+}
+
+export function toggleUIFocus() {
+  setUIFocus(!uiFocus);
+}
+
 // ===== 鼠标显示 / 隐藏控制 =====
 let cursorVisible = false; // 初始隐藏鼠标
 
@@ -34,13 +58,14 @@ function mapKeyToDir(key) {
 }
 
 window.addEventListener("keydown", (e) => {
-    // ESC：切换鼠标显示 / 隐藏
+  // ESC：切换 UI / 暂停状态
   if (e.key === "Escape") {
-    cursorVisible = !cursorVisible;
-    updateCursor();
+    toggleUIFocus();
     e.preventDefault();
     return;
   }
+
+  if (uiFocus) return;
 
   const dir = mapKeyToDir(e.key);
   if (!dir) return;
@@ -52,6 +77,8 @@ window.addEventListener("keydown", (e) => {
 }, { passive: false });
 
 window.addEventListener("keyup", (e) => {
+  if (uiFocus) return;
+
   const dir = mapKeyToDir(e.key);
   if (!dir) return;
 
@@ -60,11 +87,10 @@ window.addEventListener("keyup", (e) => {
   if (e.key.startsWith("Arrow")) e.preventDefault();
 }, { passive: false });
 
-// 切出网页时清空按键（避免卡键）
+// 切出网页时清空按键并强制进入 UI 模式（避免卡键）
 window.addEventListener("blur", () => {
   keys.up = keys.down = keys.left = keys.right = false;
 
-  // 切出网页时强制显示鼠标，避免找不到
-  cursorVisible = true;
-  updateCursor();
+  // 切出网页时强制进入 UI 模式
+  setUIFocus(true);
 });

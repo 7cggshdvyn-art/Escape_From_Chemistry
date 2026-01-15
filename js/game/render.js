@@ -1,4 +1,4 @@
-// js/game/render.js
+import { isUIFocus } from "./input.js";
 let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
@@ -122,7 +122,8 @@ export function renderFrame(player) {
     ctx.restore();
   }
   // 画准星：跟着鼠标位置（相对 canvas 的 screen 坐标）
-  if (hasMouse) {
+  // 进入 ESC / 选单(UI focus) 时隐藏准星
+  if (!isUIFocus() && hasMouse) {
     const cw = 32;
     const ch = 32;
 
