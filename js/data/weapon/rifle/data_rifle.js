@@ -17,7 +17,8 @@ const rifle = [
       caliber: "AR",          
       durability: 120,        
       damage: 16,            
-      fireRate: 10,          
+      fireRate: 10,  
+      magSize: 30,        
       reloadTime: 3,          
       bulletSpeed: 118,       
       range: 23,              
@@ -56,7 +57,8 @@ const rifle = [
       caliber: "AR",          
       durability: 120,        
       damage: 17,            
-      fireRate: 10.87,          
+      fireRate: 10.87,   
+      magSize: 30,       
       reloadTime: 2.9,          
       bulletSpeed: 118,       
       range: 24.7,              
@@ -95,7 +97,8 @@ const rifle = [
       caliber: "AR",          
       durability: 100,        
       damage: 12,            
-      fireRate: 13.5,          
+      fireRate: 13.5,   
+      magSize: 30,       
       reloadTime: 2.7,          
       bulletSpeed: 105,       
       range: 25.6,              
@@ -134,7 +137,8 @@ const rifle = [
       caliber: "AR",          
       durability: 100,        
       damage: 12,            
-      fireRate: 18,          
+      fireRate: 18,   
+      magSize: 20,       
       reloadTime: 3,          
       bulletSpeed: 85,       
       range: 21.8,              
@@ -155,5 +159,6 @@ const rifle = [
       }
     }
   },
+];
 
 export default rifle;
