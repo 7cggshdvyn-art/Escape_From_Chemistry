@@ -122,6 +122,17 @@ export function renderFrame(player) {
 
     ctx.restore();
   }
+  // ===== 射击可视化（临时：激光线，后坐力之后再加） =====
+  if (!isUIFocus() && hasMouse) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(mouseX, mouseY);
+    ctx.stroke();
+    ctx.restore();
+  }
   // 画准星：跟着鼠标位置（相对 canvas 的 screen 坐标）
   // 进入 ESC / 选单(UI focus) 时隐藏准星
   if (!isUIFocus() && hasMouse) {
