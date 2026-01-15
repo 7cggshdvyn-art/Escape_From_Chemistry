@@ -2,9 +2,13 @@ import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
 import { isUIFocus } from "./input.js";
+import characterData from "../data/character/data_character.js";
 
 
 let running = false;
+
+// ===== Character data =====
+const playerChar = characterData.find(c => c.id === "player");
 
 // ===== Rifle system (shared by all rifles) =====
 function getRifleDefById(id) {
@@ -30,6 +34,10 @@ let mouseX = 0;
 let mouseY = 0;
 let hasMouse = false;
 let isMouseDown = false;
+
+// ===== Shooting visual state =====
+export let lastShotVisualAt = 0; // ms
+export const SHOT_FLASH_DURATION = 60; // ms
 
 export function startGame() {
   if (running) return;
@@ -87,9 +95,17 @@ function tryFire(player, now) {
   w.ammoInMag--;
   w.lastShotAt = now;
 
+  // 触发射击视觉（给 render 用）
+  lastShotVisualAt = now;
+
   const dx = mouseX - player.x;
   const dy = mouseY - player.y;
   player.angle = Math.atan2(dy, dx);
+
+  if (playerChar && playerChar.combat) {
+    // 这里只是预留接口：之后命中计算会用到
+    // const dmgMultiplier = playerChar.combat.gunDamageMultiplier;
+  }
 
   console.log("FIRE", w.def.id, "ammo", w.ammoInMag);
 }

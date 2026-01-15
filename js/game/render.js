@@ -1,4 +1,5 @@
 import { isUIFocus } from "./input.js";
+import { lastShotVisualAt, SHOT_FLASH_DURATION } from "./game.js";
 let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
@@ -123,10 +124,11 @@ export function renderFrame(player) {
     ctx.restore();
   }
 
-  // ===== 射击可视化（临时：激光线，后坐力之后再加） =====
-  if (!isUIFocus() && hasMouse) {
+  // ===== 射击可视化：只在「射击瞬间」闪现 =====
+  const now = performance.now();
+  if (!isUIFocus() && hasMouse && (now - lastShotVisualAt < SHOT_FLASH_DURATION)) {
     ctx.save();
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.35)";
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.45)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x, y);
