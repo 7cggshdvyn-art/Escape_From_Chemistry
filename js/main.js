@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnContinue = $("btn-continue");
   if (btnContinue) {
     btnContinue.addEventListener("click", () => {
+      alert("请在Google Chorme浏览器进行游戏，其他浏览器存在兼容性问题（safari) firefox, edge等尚未测试，将会测试");
       console.log("进入游戏");
       window.__gameStarted = true;
       // 進入遊戲：切到遊戲模式（游標隱藏、可操作）
