@@ -339,8 +339,8 @@ function drawHotbar(player) {
       if (typeof iconSrc === "string" && iconSrc.length > 0) {
         const icon = getHotbarIcon(iconSrc);
         if (icon && icon.complete && icon.naturalWidth > 0) {
-          // 內縮 padding，避免貼到邊框
-          const pad = 6;
+          // 內縮 padding，避免貼到邊框（稍微放大 icon）
+          const pad = 4;
           const iw = size - pad * 2;
           const ih = size - pad * 2;
           ctx.save();
