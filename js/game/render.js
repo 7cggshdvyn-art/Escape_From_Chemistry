@@ -200,15 +200,19 @@ export function renderFrame(player, fireVisual = {}) {
     const aiming = window.__aiming === true;
     const gap = aiming ? gapAds : gapHip;
 
-    // 每段图片尺寸（你也可以之后改成依图片原始尺寸）
-    const segW = 18;
-    const segH = 18;
+    // 你的素材是 1024x1024，大幅縮小會讓細線被抗鋸齒吃掉，所以先用大一點的顯示尺寸
+    const segW = 96;
+    const segH = 96;
 
     // 中点尺寸
-    const dotW = 6;
-    const dotH = 6;
+    const dotW = 24;
+    const dotH = 24;
 
     const allSegReady = crossUpReady && crossDownReady && crossLeftReady && crossRightReady;
+
+    // 畫準心圖片時關掉抗鋸齒，避免細線縮放後看不見
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
 
     if (allSegReady) {
       // 上
@@ -241,10 +245,15 @@ export function renderFrame(player, fireVisual = {}) {
       ctx.restore();
     }
 
+    ctx.restore();
+
     // 中点：只有瞄准才画
     if (aiming) {
       if (crossDotReady) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(crossDotImg, cx - dotW / 2, cy - dotH / 2, dotW, dotH);
+        ctx.restore();
       } else {
         ctx.save();
         ctx.fillStyle = "#000000";
