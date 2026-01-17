@@ -9,6 +9,8 @@ export const keys = {
 // ===== 射击 / 瞄准状态（供 render/game 共用） =====
 window.__firing = false; // 相当于「滑鼠左键按住」
 window.__aiming = false; // 相当于「滑鼠右键按住」
+// 只有進入遊戲後才允許用 ESC 或 / 切換 UI focus
+window.__gameStarted = false;
 
 
 // ===== UI / 暂停状态 =====
@@ -61,6 +63,9 @@ function mapKeyToDir(key) {
 window.addEventListener("keydown", (e) => {
   // ESC 或 / ：切换 UI / 暂停状态（iPad Safari 的 ESC 可能会退出浏览器）
   if (e.key === "Escape" || e.key === "/" || e.code === "Slash") {
+    // 主畫面/選單階段不處理，避免游標狀態抖動
+    if (!window.__gameStarted) return;
+
     toggleUIFocus();
     e.preventDefault();
     return;
