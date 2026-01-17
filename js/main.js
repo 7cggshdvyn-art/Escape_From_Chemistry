@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnContinue) {
     btnContinue.addEventListener("click", () => {
       console.log("进入游戏");
+      window.__gameStarted = true;
       // 進入遊戲：切到遊戲模式（游標隱藏、可操作）
       setUIFocus(false);
       startGame();
