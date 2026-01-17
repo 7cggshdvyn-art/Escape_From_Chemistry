@@ -201,12 +201,11 @@ export function renderFrame(player, fireVisual = {}) {
     const gap = aiming ? gapAds : gapHip;
 
     // 你的素材是 1024x1024，大幅縮小會讓細線被抗鋸齒吃掉，所以先用大一點的顯示尺寸
-    const segW = 96;
-    const segH = 96;
+    const segW = 48;
+const segH = 48;
 
-    // 中点尺寸
-    const dotW = 24;
-    const dotH = 24;
+const dotW = 10;
+const dotH = 10;
 
     const allSegReady = crossUpReady && crossDownReady && crossLeftReady && crossRightReady;
 
