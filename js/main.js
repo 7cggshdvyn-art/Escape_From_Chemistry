@@ -1,7 +1,11 @@
 import { startGame } from "./game/game.js";
+import { setUIFocus } from "./game/input.js";
 console.log("main module loaded");
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (id) => document.getElementById(id);
+
+  // 主畫面 / 主選單期間：顯示游標（避免還沒進遊戲就 cursor:none 造成閃爍感）
+  setUIFocus(true);
 
   // ====== 开始画面：点击淡出 -> 显示主菜单 ======
   const startScreen = $("start-screen");
@@ -21,6 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         startScreen.style.display = "none";
         showMainMenu();
+        // 還在選單：保持游標顯示
+        setUIFocus(true);
       }, 600);
     };
 
@@ -39,6 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnContinue) {
     btnContinue.addEventListener("click", () => {
       console.log("进入游戏");
+      // 進入遊戲：切到遊戲模式（游標隱藏、可操作）
+      setUIFocus(false);
       startGame();
     });
   }
@@ -67,12 +75,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!modal) return;
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
+    setUIFocus(true);
   };
 
   const closeSettings = () => {
     if (!modal) return;
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
+    setUIFocus(true);
   };
 
   if (btnSettings) btnSettings.addEventListener("click", openSettings);
