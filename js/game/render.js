@@ -10,7 +10,7 @@ let crosshairReady = false;
 // 鼠标坐标
 let mouseX = 0;
 let mouseY = 0;
-let hasMouse = false;
+let hasMouse = true;
 
 // 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
@@ -30,6 +30,11 @@ export function initRender() {
 
   // 设定画布尺寸（先跟视窗一样大）
   resizeCanvas();
+  // 初始把准星放在画面中心（不需要等 mousemove）
+  mouseX = canvas.width / 2;
+  mouseY = canvas.height / 2;
+  hasMouse = true;
+
   window.addEventListener("resize", resizeCanvas);
 
   // 载入箭头图片
@@ -70,6 +75,12 @@ function resizeCanvas() {
   if (!canvas) return;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+
+  // 如果还没有收到过 mousemove，就把准星维持在中心
+  if (!hasMouse) {
+    mouseX = canvas.width / 2;
+    mouseY = canvas.height / 2;
+  }
 }
 
 export function renderFrame(player, fireVisual = {}) {
@@ -143,7 +154,7 @@ export function renderFrame(player, fireVisual = {}) {
   }
   // 画准星：跟着鼠标位置（相对 canvas 的 screen 坐标）
   // 进入 ESC / 选单(UI focus) 时隐藏准星
-  if (!isUIFocus() && hasMouse) {
+  if (!isUIFocus()) {
     const cw = 32;
     const ch = 32;
 
