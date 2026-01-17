@@ -53,6 +53,10 @@ updateCursor();
 // 1~8 = 槍械/物品槽；0 = 近戰（V）
 window.__hotbarSelected = 1;
 
+// ===== 換彈請求（一次性） =====
+// game.js 會在每幀讀取並消耗它
+window.__reloadRequested = false;
+
 // 把各种键名统一映射成 up/down/left/right
 function mapKeyToDir(key) {
   // WASD
@@ -104,6 +108,13 @@ window.addEventListener("keydown", (e) => {
       e.preventDefault();
       return;
     }
+  }
+
+  // R：換彈（一次性請求）
+  if (!uiFocus && (e.key === "r" || e.key === "R")) {
+    window.__reloadRequested = true;
+    e.preventDefault();
+    return;
   }
 
   if (uiFocus) return;

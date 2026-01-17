@@ -1,7 +1,11 @@
 import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
+
 import { isUIFocus, setUIFocus } from "./input.js";
+
+// R 換彈請求（由 input.js 設定）
+const getReloadRequested = () => window.__reloadRequested === true;
 import characterData from "../data/character/data_character.js";
 
 
@@ -96,7 +100,20 @@ export function startGame() {
     }
   });
 
+  // R 鍵換彈（一次性請求）
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "r" || e.key === "R") {
+      window.__reloadRequested = true;
+    }
+  });
+
   equipRifle(player, "AK-47");
+
+  // 根據目前選取的 hotbar slot 裝備武器（先支援 rifle）
+  const sel = player.inventory?.hotbar?.[player.activeHotbarSlot];
+  if (sel && sel.type === "rifle") {
+    equipRifle(player, sel.id);
+  }
 
   requestAnimationFrame(loop);
 }
@@ -145,10 +162,26 @@ function tryFire(player, now) {
   console.log("FIRE", w.def.id, "ammo", w.ammoInMag);
 }
 
+
 function startReload(w, s) {
   if (w.isReloading) return;
   w.isReloading = true;
   w.reloadEndAt = performance.now() + s.reloadTime * 1000;
+}
+
+function handleReload(player, now) {
+  if (isUIFocus()) return;
+
+  if (!getReloadRequested()) return;
+  window.__reloadRequested = false;
+
+  const w = player.weapon;
+  if (!w || w.isReloading) return;
+
+  const s = w.def.stats;
+  if (w.ammoInMag >= s.magSize) return;
+
+  startReload(w, s);
 }
 
 function updateReload(player, now) {
@@ -167,6 +200,7 @@ function loop() {
   player.update();
 
   updateReload(player, now);
+  handleReload(player, now);
   tryFire(player, now);
 
   // 每帧渲染（把玩家画出来）

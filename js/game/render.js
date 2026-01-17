@@ -307,6 +307,10 @@ function drawHotbar(player) {
   ctx.textBaseline = "middle";
   ctx.font = "14px system-ui, -apple-system, sans-serif";
 
+  // 記錄選取槽位的位置（用來在上方畫子彈數）
+  let selectedCenterX = null;
+  let selectedTopY = null;
+
   for (let i = 0; i < layout.length; i++) {
     const slot = layout[i];
     const x = startX + i * (size + gap);
@@ -322,12 +326,40 @@ function drawHotbar(player) {
 
     // 選取高亮（V 近戰位不畫格子高亮）
     if (slot === selected && slot !== 0) {
+      selectedCenterX = x + size / 2;
+      selectedTopY = y;
+
+      // 先給一點淡淡的底光
       ctx.save();
       ctx.fillStyle = selFill;
-      ctx.strokeStyle = selStroke;
       roundRect(ctx, x - 1, y - 1, size + 2, size + 2, radius + 1);
       ctx.fill();
+
+      // 霓虹紅白紅邊框（外紅 / 中白 / 內紅）
+      ctx.shadowColor = "rgba(255, 0, 0, 0.55)";
+      ctx.shadowBlur = 10;
+
+      // 外紅
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.85)";
+      roundRect(ctx, x - 2, y - 2, size + 4, size + 4, radius + 2);
       ctx.stroke();
+
+      // 中白
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      roundRect(ctx, x - 1, y - 1, size + 2, size + 2, radius + 1);
+      ctx.stroke();
+
+      // 內紅
+      ctx.shadowColor = "rgba(255, 0, 0, 0.45)";
+      ctx.shadowBlur = 6;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.75)";
+      roundRect(ctx, x + 0.5, y + 0.5, size - 1, size - 1, radius);
+      ctx.stroke();
+
       ctx.restore();
     }
 
@@ -380,6 +412,46 @@ function drawHotbar(player) {
 
     ctx.restore();
   }
+
+  // ===== 子彈數顯示：選到槍時顯示 x/彈夾量 =====
+  // 只顯示目前手上武器的彈藥（之後你做多武器切換時再對齊 slot id）
+  if (selected !== 0 && selectedCenterX != null && selectedTopY != null) {
+    const selItem = player?.inventory?.hotbar?.[selected] ?? null;
+    const isRifle = selItem?.type === "rifle";
+
+    if (isRifle && player?.weapon?.def?.stats) {
+      const ammo = typeof player.weapon.ammoInMag === "number" ? player.weapon.ammoInMag : 0;
+      const mag = typeof player.weapon.def.stats.magSize === "number" ? player.weapon.def.stats.magSize : 0;
+      const text = `${ammo}/${mag}`;
+
+      const boxPadX = 8;
+      const boxH = 22;
+      const boxY = selectedTopY - 12 - boxH; // 在格子上方
+
+      ctx.save();
+      ctx.font = "14px system-ui, -apple-system, sans-serif";
+      const textW = ctx.measureText(text).width;
+      const boxW = Math.max(44, textW + boxPadX * 2);
+      const boxX = selectedCenterX - boxW / 2;
+
+      // 白底
+      ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+      roundRect(ctx, boxX, boxY, boxW, boxH, 6);
+      ctx.fill();
+
+      // 黑字
+      ctx.fillStyle = "#000000";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, selectedCenterX, boxY + boxH / 2 + 0.5);
+
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+}
+
 function getHotbarIcon(src) {
   if (!src) return null;
 
@@ -397,9 +469,6 @@ function getHotbarIcon(src) {
 
   hotbarIconCache.set(src, img);
   return img;
-}
-
-  ctx.restore();
 }
 
 function roundRect(ctx, x, y, w, h, r) {
