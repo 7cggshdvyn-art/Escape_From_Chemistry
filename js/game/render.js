@@ -290,9 +290,9 @@ function drawHotbar() {
   const startX = (canvas.width - totalW) / 2 + 120;
   const y = canvas.height - padBottom - size;
 
-  // 純黑、再更透明一點
-  const fill = "rgba(0, 0, 0, 0.08)";
-  const stroke = "rgba(0, 0, 0, 0.16)";
+  // 純黑、但能看出影子的透明度
+  const fill = "rgba(0, 0, 0, 0.18)";
+  const stroke = "rgba(0, 0, 0, 0.32)";
 
   // 選取框更亮（仍用白色讓選取清楚）
   const selStroke = "rgba(255, 255, 255, 0.70)";
