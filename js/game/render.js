@@ -1,10 +1,14 @@
-import { isUIFocus, setUIFocus } from "./input.js";
+import { isUIFocus } from "./input.js";
 let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
 
-let crosshairImg;
-let crosshairReady = false;
+let crossUpImg, crossDownImg, crossLeftImg, crossRightImg, crossDotImg;
+let crossUpReady = false;
+let crossDownReady = false;
+let crossLeftReady = false;
+let crossRightReady = false;
+let crossDotReady = false;
 
 
 // 鼠标坐标
@@ -15,7 +19,12 @@ let hasMouse = true;
 // 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
 
-const CROSSHAIR_SRC = "images/ui/on-go/aim-cross.png";
+// 你自己把路徑改成 5 張圖
+const CROSS_UP_SRC = "images/ui/on-go/crosshair_up.png";
+const CROSS_DOWN_SRC = "images/ui/on-go/crosshair_down.png";
+const CROSS_LEFT_SRC = "images/ui/on-go/crosshair_left.png";
+const CROSS_RIGHT_SRC = "images/ui/on-go/crosshair_right.png";
+const CROSS_DOT_SRC = "images/ui/on-go/crosshair_dot.png";
 
 export function initRender() {
   // 找 canvas
@@ -48,16 +57,41 @@ export function initRender() {
     console.error("箭头图片加载失败，检查路径：", ARROW_SRC);
   };
 
-  // 载入准星图片
-  crosshairImg = new Image();
-  crosshairImg.src = CROSSHAIR_SRC;
-  crosshairImg.onload = () => {
-    crosshairReady = true;
-    console.log("crosshair image loaded:", CROSSHAIR_SRC);
+  // 载入准星图片（5 部件）
+  crossUpImg = new Image();
+  crossUpImg.src = CROSS_UP_SRC;
+  crossUpImg.onload = () => {
+    crossUpReady = true;
+    console.log("crosshair up loaded:", CROSS_UP_SRC);
   };
-  // crosshairImg.onerror = () => {
-  //   console.error("准星图片加载失败，检查路径：", CROSSHAIR_SRC);
-  // };
+
+  crossDownImg = new Image();
+  crossDownImg.src = CROSS_DOWN_SRC;
+  crossDownImg.onload = () => {
+    crossDownReady = true;
+    console.log("crosshair down loaded:", CROSS_DOWN_SRC);
+  };
+
+  crossLeftImg = new Image();
+  crossLeftImg.src = CROSS_LEFT_SRC;
+  crossLeftImg.onload = () => {
+    crossLeftReady = true;
+    console.log("crosshair left loaded:", CROSS_LEFT_SRC);
+  };
+
+  crossRightImg = new Image();
+  crossRightImg.src = CROSS_RIGHT_SRC;
+  crossRightImg.onload = () => {
+    crossRightReady = true;
+    console.log("crosshair right loaded:", CROSS_RIGHT_SRC);
+  };
+
+  crossDotImg = new Image();
+  crossDotImg.src = CROSS_DOT_SRC;
+  crossDotImg.onload = () => {
+    crossDotReady = true;
+    console.log("crosshair dot loaded:", CROSS_DOT_SRC);
+  };
 
   // 显示画布（如果你一开始隐藏它）
   canvas.style.display = "block";
@@ -154,27 +188,71 @@ export function renderFrame(player, fireVisual = {}) {
   }
   // 画准星：跟着鼠标位置（相对 canvas 的 screen 坐标）
   // 进入 ESC / 选单(UI focus) 时隐藏准星
+  // 规则：腰射不画中点；右键瞄准（window.__aiming === true）才画中点
   if (!isUIFocus()) {
-    const cw = 32;
-    const ch = 32;
+    const cx = mouseX;
+    const cy = mouseY;
 
-    if (crosshairReady) {
-      ctx.save();
-      // 以中心点绘制准星
-      ctx.drawImage(crosshairImg, mouseX - cw / 2, mouseY - ch / 2, cw, ch);
-      ctx.restore();
+    // 之后要做动画会用到：gap 控制四段离中心的距离
+    const gapHip = 10; // 腰射间距
+    const gapAds = 6;  // 瞄准间距（更紧）
+
+    const aiming = window.__aiming === true;
+    const gap = aiming ? gapAds : gapHip;
+
+    // 每段图片尺寸（你也可以之后改成依图片原始尺寸）
+    const segW = 18;
+    const segH = 18;
+
+    // 中点尺寸
+    const dotW = 6;
+    const dotH = 6;
+
+    const allSegReady = crossUpReady && crossDownReady && crossLeftReady && crossRightReady;
+
+    if (allSegReady) {
+      // 上
+      ctx.drawImage(crossUpImg, cx - segW / 2, cy - gap - segH, segW, segH);
+      // 下
+      ctx.drawImage(crossDownImg, cx - segW / 2, cy + gap, segW, segH);
+      // 左
+      ctx.drawImage(crossLeftImg, cx - gap - segW, cy - segH / 2, segW, segH);
+      // 右
+      ctx.drawImage(crossRightImg, cx + gap, cy - segH / 2, segW, segH);
     } else {
-      // 图片还没加载好，先画个十字占位
+      // 占位：四段式
       ctx.save();
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(mouseX - 10, mouseY);
-      ctx.lineTo(mouseX + 10, mouseY);
-      ctx.moveTo(mouseX, mouseY - 10);
-      ctx.lineTo(mouseX, mouseY + 10);
+      // 上
+      ctx.moveTo(cx, cy - gap - 14);
+      ctx.lineTo(cx, cy - gap - 4);
+      // 下
+      ctx.moveTo(cx, cy + gap + 4);
+      ctx.lineTo(cx, cy + gap + 14);
+      // 左
+      ctx.moveTo(cx - gap - 14, cy);
+      ctx.lineTo(cx - gap - 4, cy);
+      // 右
+      ctx.moveTo(cx + gap + 4, cy);
+      ctx.lineTo(cx + gap + 14, cy);
       ctx.stroke();
       ctx.restore();
+    }
+
+    // 中点：只有瞄准才画
+    if (aiming) {
+      if (crossDotReady) {
+        ctx.drawImage(crossDotImg, cx - dotW / 2, cy - dotH / 2, dotW, dotH);
+      } else {
+        ctx.save();
+        ctx.fillStyle = "#000000";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
   }
 }

@@ -6,6 +6,9 @@ export const keys = {
   right: false,
 };
 
+// ===== 瞄准（ADS）状态 =====
+window.__aiming = false;
+
 // ===== UI / 暂停状态 =====
 let uiFocus = false; // true = 选单/ESC状态，角色不可移动
 
@@ -19,6 +22,7 @@ export function setUIFocus(state) {
   // 进入 UI 时：清空移动键，避免松不开
   if (uiFocus) {
     keys.up = keys.down = keys.left = keys.right = false;
+    window.__aiming = false;
   }
 
   // UI 时显示鼠标，游戏时隐藏鼠标
@@ -93,4 +97,24 @@ window.addEventListener("blur", () => {
 
   // 切出网页时强制进入 UI 模式
   setUIFocus(true);
+});
+
+// ===== 右键瞄准（ADS） =====
+window.addEventListener("contextmenu", (e) => {
+  // 阻止右键菜单
+  e.preventDefault();
+});
+
+window.addEventListener("mousedown", (e) => {
+  // 右键按下 → 进入瞄准
+  if (e.button === 2 && !uiFocus) {
+    window.__aiming = true;
+  }
+});
+
+window.addEventListener("mouseup", (e) => {
+  // 右键松开 → 退出瞄准
+  if (e.button === 2) {
+    window.__aiming = false;
+  }
 });
