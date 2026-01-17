@@ -13,6 +13,8 @@ let crossLeftReady = false;
 let crossRightReady = false;
 let crossDotReady = false;
 
+// ===== Crosshair spread animation (gap lerp) =====
+let crossGapPx = null; // 當前四段距離（px），用來做平滑動畫
 
 // 鼠标坐标
 let mouseX = 0;
@@ -197,11 +199,29 @@ export function renderFrame(player, fireVisual = {}) {
     const cy = mouseY;
 
     // 之后要做动画会用到：gap 控制四段离中心的距离
-    const gapHip = 10; // 腰射间距
-    const gapAds = 6;  // 瞄准间距（更紧）
+    // 规则：用武器数据的 hipSpread / aimSpread 来决定 gap，并做平滑动画
 
     const aiming = window.__aiming === true;
-    const gap = aiming ? gapAds : gapHip;
+        const weaponStats = player?.weapon?.def?.stats;
+    const hipSpread = (weaponStats && typeof weaponStats.hipSpread === "number") ? weaponStats.hipSpread : 30;
+    const aimSpread = (weaponStats && typeof weaponStats.aimSpread === "number") ? weaponStats.aimSpread : 10;
+
+    // 把「散布数值」映射到「像素间距」：纯 UI 显示用
+    // 经验值：base 让最小 gap 不会太小，k 控制不同枪的差异
+    const base = 3;
+    const k = 0.19;
+    const targetGap = base + k * (aiming ? aimSpread : hipSpread);
+
+    // 平滑（lerp）避免突然跳动
+    if (crossGapPx == null) {
+      crossGapPx = targetGap;
+    } else {
+      crossGapPx += (targetGap - crossGapPx) * 0.20;
+    }
+
+    // 最终 gap（限制范围，避免极端数值撑爆）
+    const gap = Math.max(2, Math.min(18, crossGapPx));
+
 
     // 你的素材是 1024x1024，大幅縮小會讓細線被抗鋸齒吃掉，所以先用大一點的顯示尺寸
   const crossScale = 0.9; // 👈 全局縮放倍率（0.4 ~ 0.8 都合理）
