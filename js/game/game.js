@@ -1,7 +1,7 @@
 import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
-import { isUIFocus } from "./input.js";
+import { isUIFocus, setUIFocus } from "./input.js";
 import characterData from "../data/character/data_character.js";
 
 
@@ -47,6 +47,8 @@ export function startGame() {
 
   // 初始化画面（canvas、贴图等）
   initRender();
+  // 進入遊戲時強制回到「遊戲模式」（準星顯示、可移動）
+  setUIFocus(false);
 
   window.addEventListener("mousemove", (e) => {
     mouseX = e.clientX;

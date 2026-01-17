@@ -1,4 +1,4 @@
-import { isUIFocus } from "./input.js";
+import { isUIFocus, setUIFocus } from "./input.js";
 let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
