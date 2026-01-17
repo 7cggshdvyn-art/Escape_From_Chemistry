@@ -44,12 +44,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnContinue = $("btn-continue");
   if (btnContinue) {
     btnContinue.addEventListener("click", () => {
-      alert("请在Google Chorme浏览器进行游戏，其他浏览器存在兼容性问题（safari) firefox, edge等尚未测试，将会测试");
+      // NOTE: 不用 alert（iPad/Safari 會觸發 blur，讓 uiFocus 又被切回 true）
+      console.log("浏览器提示：请在 Google Chrome 浏览器进行游戏，其他浏览器可能存在兼容性问题（Safari/Firefox/Edge 等尚未完整测试）");
       console.log("进入游戏");
+
       window.__gameStarted = true;
+
+      // 進入遊戲：把主選單/設定 UI 收起來，避免覆蓋遊戲層
+      if (mainMenu) mainMenu.classList.add("is-hidden");
+      if (modal) {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
       // 進入遊戲：切到遊戲模式（游標隱藏、可操作）
-      setUIFocus(false);
-      startGame();
+      // 用 rAF 讓瀏覽器先完成 click/focus，再切狀態，避免被 blur handler 蓋回去
+      requestAnimationFrame(() => {
+        setUIFocus(false);
+        startGame();
+      });
     });
   }
 
