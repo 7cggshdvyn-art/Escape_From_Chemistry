@@ -201,7 +201,7 @@ export function renderFrame(player, fireVisual = {}) {
     const gap = aiming ? gapAds : gapHip;
 
     // 你的素材是 1024x1024，大幅縮小會讓細線被抗鋸齒吃掉，所以先用大一點的顯示尺寸
-  const crossScale = 0.85; // 👈 全局縮放倍率（0.4 ~ 0.8 都合理）
+  const crossScale = 0.9; // 👈 全局縮放倍率（0.4 ~ 0.8 都合理）
 
     const segW = 36 * crossScale;
     const segH = 36 * crossScale;
