@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnNew) btnNew.addEventListener("click", () => alert("这里以后做新游戏"));
 
   const btnCredits = $("btn-credits");
-  if (btnCredits) btnCredits.addEventListener("click", () => alert("Karson, Aaaron, Nathan, 其他我還不確定"));
+  if (btnCredits) btnCredits.addEventListener("click", () => alert("鳴謝 Karson, Aaron, Nathan 鳴謝"));
 
   const btnExit = $("btn-exit");
   if (btnExit) btnExit.addEventListener("click", () => alert("网页版通常用返回/关闭标签页，这里先占位"));
