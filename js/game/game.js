@@ -175,13 +175,14 @@ function startReload(w, s) {
 function handleReload(player, now) {
   if (isUIFocus()) return;
 
+  // 先消耗 R 換彈請求：避免在非槍槽位按 R 被「排隊」到之後切回槍才觸發
+  if (!getReloadRequested()) return;
+  window.__reloadRequested = false;
+
   // 目前選到的快捷欄必須是槍，才允許換彈
   const selectedSlot = (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : (player.activeHotbarSlot ?? 1);
   const selectedItem = player.inventory?.hotbar?.[selectedSlot] ?? null;
   if (!selectedItem || selectedItem.type !== "rifle") return;
-
-  if (!getReloadRequested()) return;
-  window.__reloadRequested = false;
 
   const w = player.weapon;
   if (!w || w.isReloading) return;
