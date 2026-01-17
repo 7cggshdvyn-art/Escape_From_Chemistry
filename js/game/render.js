@@ -72,7 +72,13 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 
-export function renderFrame(player) {
+export function renderFrame(player, fireVisual = {}) {
+  const {
+    lastShotVisualAt = 0,
+    SHOT_FLASH_DURATION = 0,
+  } = fireVisual;
+
+  // ↓↓↓ 你原本 renderFrame 裡面的所有畫圖程式碼都要留在這裡（不要跑到函數外）
   if (!ctx) return;
 
   // 清画面
