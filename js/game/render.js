@@ -282,7 +282,7 @@ function drawHotbar() {
 
   const size = 44;        // 格子大小
   const gap = 10;         // 格子間距
-  const padBottom = 44;   // 離底部距離（整體往上移）
+  const padBottom = 34;   // 離底部距離（整體稍微往下）
   const radius = 8;       // 圓角
 
   const totalW = layout.length * size + (layout.length - 1) * gap;
@@ -290,9 +290,9 @@ function drawHotbar() {
   const startX = (canvas.width - totalW) / 2 + 120;
   const y = canvas.height - padBottom - size;
 
-  // 黑色、透明度更低（更透明）
-  const fill = "rgba(0, 0, 0, 0.14)";
-  const stroke = "rgba(0, 0, 0, 0.22)";
+  // 純黑、再更透明一點
+  const fill = "rgba(0, 0, 0, 0.08)";
+  const stroke = "rgba(0, 0, 0, 0.16)";
 
   // 選取框更亮（仍用白色讓選取清楚）
   const selStroke = "rgba(255, 255, 255, 0.70)";
