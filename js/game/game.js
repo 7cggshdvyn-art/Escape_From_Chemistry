@@ -3,10 +3,10 @@ import { initRender, renderFrame } from "./render.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
 
 import { isUIFocus, setUIFocus } from "./input.js";
+import characterData from "../data/character/data_character.js";
 
 // R 換彈請求（由 input.js 設定）
 const getReloadRequested = () => window.__reloadRequested === true;
-import characterData from "../data/character/data_character.js";
 
 
 let running = false;
@@ -100,12 +100,6 @@ export function startGame() {
     }
   });
 
-  // R 鍵換彈（一次性請求）
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "r" || e.key === "R") {
-      window.__reloadRequested = true;
-    }
-  });
 
   equipRifle(player, "AK-47");
 
@@ -140,7 +134,7 @@ function tryFire(player, now) {
   if (now - w.lastShotAt < interval) return;
 
   if (w.ammoInMag <= 0) {
-    startReload(w, s);
+    // 子彈打光：不自動換彈，等待玩家按 R
     return;
   }
 
