@@ -57,11 +57,17 @@ export function startGame() {
   });
 
   window.addEventListener("mousedown", (e) => {
-    if (e.button === 0) isMouseDown = true;
+    if (e.button === 0) {
+      isMouseDown = true;
+      window.__firing = true;
+    }
   });
 
   window.addEventListener("mouseup", (e) => {
-    if (e.button === 0) isMouseDown = false;
+    if (e.button === 0) {
+      isMouseDown = false;
+      window.__firing = false;
+    }
   });
 
   equipRifle(player, "AK-47");
@@ -80,7 +86,8 @@ function equipRifle(player, rifleId) {
 
 function tryFire(player, now) {
   if (isUIFocus()) return;
-  if (!isMouseDown || !hasMouse) return;
+  const firing = (window.__firing === true) || isMouseDown;
+  if (!firing || !hasMouse) return;
 
   const w = player.weapon;
   if (!w || w.isReloading) return;
