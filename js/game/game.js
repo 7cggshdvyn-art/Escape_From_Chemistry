@@ -79,6 +79,10 @@ export function startGame() {
   if (typeof player.activeHotbarSlot !== "number") {
     player.activeHotbarSlot = 1;
   }
+  // 與 input 的選取槽位同步（避免不同步造成誤判）
+  if (typeof window.__hotbarSelected === "number") {
+    player.activeHotbarSlot = window.__hotbarSelected;
+  }
 
   window.addEventListener("mousemove", (e) => {
     mouseX = e.clientX;
@@ -126,6 +130,11 @@ function tryFire(player, now) {
   const firing = (window.__firing === true) || isMouseDown;
   if (!firing || !hasMouse) return;
 
+  // 只有當目前選到的快捷欄槽位是槍（rifle）時才允許射擊
+  const selectedSlot = (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : (player.activeHotbarSlot ?? 1);
+  const selectedItem = player.inventory?.hotbar?.[selectedSlot] ?? null;
+  if (!selectedItem || selectedItem.type !== "rifle") return;
+
   const w = player.weapon;
   if (!w || w.isReloading) return;
 
@@ -165,6 +174,11 @@ function startReload(w, s) {
 
 function handleReload(player, now) {
   if (isUIFocus()) return;
+
+  // 目前選到的快捷欄必須是槍，才允許換彈
+  const selectedSlot = (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : (player.activeHotbarSlot ?? 1);
+  const selectedItem = player.inventory?.hotbar?.[selectedSlot] ?? null;
+  if (!selectedItem || selectedItem.type !== "rifle") return;
 
   if (!getReloadRequested()) return;
   window.__reloadRequested = false;
