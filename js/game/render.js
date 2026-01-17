@@ -286,7 +286,8 @@ function drawHotbar() {
   const radius = 8;       // 圓角
 
   const totalW = layout.length * size + (layout.length - 1) * gap;
-  const startX = (canvas.width - totalW) / 2;
+  // 整組快捷欄向右偏移（左邊預留 UI 空間）
+  const startX = (canvas.width - totalW) / 2 + 120;
   const y = canvas.height - padBottom - size;
 
   // 淡灰、稍微透明
@@ -307,15 +308,17 @@ function drawHotbar() {
     const slot = layout[i];
     const x = startX + i * (size + gap);
 
-    // 底色
-    ctx.fillStyle = fill;
-    ctx.strokeStyle = stroke;
-    roundRect(ctx, x, y, size, size, radius);
-    ctx.fill();
-    ctx.stroke();
+    // 底色（V 近戰位不畫格子，只保留位置）
+    if (slot !== 0) {
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = stroke;
+      roundRect(ctx, x, y, size, size, radius);
+      ctx.fill();
+      ctx.stroke();
+    }
 
-    // 選取高亮
-    if (slot === selected) {
+    // 選取高亮（V 近戰位不畫格子高亮）
+    if (slot === selected && slot !== 0) {
       ctx.save();
       ctx.fillStyle = selFill;
       ctx.strokeStyle = selStroke;
@@ -325,16 +328,33 @@ function drawHotbar() {
       ctx.restore();
     }
 
-    // 標籤（暫時用文字，之後你接武器圖示/子彈數時再換掉）
+    // 標籤：顯示在格子下方（白色底框），V 與數字同一排
     ctx.save();
-    if (slot === 0) {
-      // V 近戰預留位：更淡
-      ctx.fillStyle = "rgba(20, 20, 20, 0.35)";
-      ctx.fillText("V", x + size / 2, y + size / 2);
-    } else {
-      ctx.fillStyle = "rgba(20, 20, 20, 0.65)";
-      ctx.fillText(String(slot), x + size / 2, y + size / 2);
-    }
+
+    const labelY = y + size + 14; // 格子下方位置
+    const labelText = (slot === 0) ? "V" : String(slot);
+
+    // 白色小底框尺寸
+    const labelW = 18;
+    const labelH = 16;
+
+    // 白色底框
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    roundRect(
+      ctx,
+      x + size / 2 - labelW / 2,
+      labelY - labelH / 2,
+      labelW,
+      labelH,
+      4
+    );
+    ctx.fill();
+
+    // 文字
+    ctx.fillStyle = "#000000";
+    ctx.font = "12px system-ui, -apple-system, sans-serif";
+    ctx.fillText(labelText, x + size / 2, labelY);
+
     ctx.restore();
   }
 
