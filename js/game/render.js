@@ -265,4 +265,89 @@ export function renderFrame(player, fireVisual = {}) {
       }
     }
   }
+
+  // ===== 底部快捷欄（1 2 V 3 4 5 6 7 8） =====
+  drawHotbar();
+}
+
+
+function drawHotbar() {
+  if (!ctx || !canvas) return;
+
+  // 1~8 = 槍械/物品槽；0 = V 近戰預留位
+  const selected = (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : 1;
+
+  // 9 個位置：1,2,V,3,4,5,6,7,8
+  const layout = [1, 2, 0, 3, 4, 5, 6, 7, 8];
+
+  const size = 44;        // 格子大小
+  const gap = 10;         // 格子間距
+  const padBottom = 18;   // 離底部距離
+  const radius = 8;       // 圓角
+
+  const totalW = layout.length * size + (layout.length - 1) * gap;
+  const startX = (canvas.width - totalW) / 2;
+  const y = canvas.height - padBottom - size;
+
+  // 淡灰、稍微透明
+  const fill = "rgba(200, 200, 200, 0.22)";
+  const stroke = "rgba(255, 255, 255, 0.22)";
+
+  // 選取框更亮
+  const selStroke = "rgba(255, 255, 255, 0.70)";
+  const selFill = "rgba(255, 255, 255, 0.08)";
+
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "14px system-ui, -apple-system, sans-serif";
+
+  for (let i = 0; i < layout.length; i++) {
+    const slot = layout[i];
+    const x = startX + i * (size + gap);
+
+    // 底色
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    roundRect(ctx, x, y, size, size, radius);
+    ctx.fill();
+    ctx.stroke();
+
+    // 選取高亮
+    if (slot === selected) {
+      ctx.save();
+      ctx.fillStyle = selFill;
+      ctx.strokeStyle = selStroke;
+      roundRect(ctx, x - 1, y - 1, size + 2, size + 2, radius + 1);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 標籤（暫時用文字，之後你接武器圖示/子彈數時再換掉）
+    ctx.save();
+    if (slot === 0) {
+      // V 近戰預留位：更淡
+      ctx.fillStyle = "rgba(20, 20, 20, 0.35)";
+      ctx.fillText("V", x + size / 2, y + size / 2);
+    } else {
+      ctx.fillStyle = "rgba(20, 20, 20, 0.65)";
+      ctx.fillText(String(slot), x + size / 2, y + size / 2);
+    }
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
 }

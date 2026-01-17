@@ -49,6 +49,10 @@ function updateCursor() {
 // 初始化时隐藏鼠标
 updateCursor();
 
+// ===== 快捷欄（1~8 & V） =====
+// 1~8 = 槍械/物品槽；0 = 近戰（V）
+window.__hotbarSelected = 1;
+
 // 把各种键名统一映射成 up/down/left/right
 function mapKeyToDir(key) {
   // WASD
@@ -80,6 +84,23 @@ window.addEventListener("keydown", (e) => {
     }
     if (e.key === "ArrowRight") {
       window.__aiming = true;
+      e.preventDefault();
+      return;
+    }
+  }
+
+  // 快捷欄切換：1~8 與 V（近戰）
+  if (!uiFocus) {
+    // 数字键 1~8
+    if (e.key >= "1" && e.key <= "8") {
+      window.__hotbarSelected = Number(e.key);
+      e.preventDefault();
+      return;
+    }
+
+    // V：近战预留位
+    if (e.key === "v" || e.key === "V") {
+      window.__hotbarSelected = 0;
       e.preventDefault();
       return;
     }
