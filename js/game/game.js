@@ -7,6 +7,24 @@ import characterData from "../data/character/data_character.js";
 
 let running = false;
 
+// ===== Inventory / Hotbar (UI will read from here) =====
+function createDefaultInventory() {
+  return {
+    // 1~8：快捷欄；melee：V 近戰預留位
+    hotbar: {
+      1: { type: "rifle", id: "AK-47", icon: "images/data/weapon/rifle/AK-47.png" },
+      2: null,
+      3: null,
+      4: null,
+      5: null,
+      6: null,
+      7: null,
+      8: null,
+      melee: null,
+    },
+  };
+}
+
 // ===== Character data =====
 const playerChar = characterData.find(c => c.id === "player");
 
@@ -49,6 +67,14 @@ export function startGame() {
   initRender();
   // 進入遊戲時強制回到「遊戲模式」（準星顯示、可移動）
   setUIFocus(false);
+
+  // 初始化玩家物品（hotbar）——UI 會從這裡讀
+  if (!player.inventory) {
+    player.inventory = createDefaultInventory();
+  }
+  if (typeof player.activeHotbarSlot !== "number") {
+    player.activeHotbarSlot = 1;
+  }
 
   window.addEventListener("mousemove", (e) => {
     mouseX = e.clientX;

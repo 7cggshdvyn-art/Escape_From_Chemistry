@@ -3,6 +3,9 @@ let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
 
+// ===== Hotbar icon cache =====
+const hotbarIconCache = new Map();
+
 let crossUpImg, crossDownImg, crossLeftImg, crossRightImg, crossDotImg;
 let crossUpReady = false;
 let crossDownReady = false;
@@ -267,11 +270,11 @@ export function renderFrame(player, fireVisual = {}) {
   }
 
   // ===== 底部快捷欄（1 2 V 3 4 5 6 7 8） =====
-  drawHotbar();
+  drawHotbar(player);
 }
 
 
-function drawHotbar() {
+function drawHotbar(player) {
   if (!ctx || !canvas) return;
 
   // 1~8 = 槍械/物品槽；0 = V 近戰預留位
@@ -328,6 +331,26 @@ function drawHotbar() {
       ctx.restore();
     }
 
+    // 物品貼圖：畫在格子內（V 位不畫格子，也不畫 icon）
+    if (slot !== 0) {
+      const item = player?.inventory?.hotbar?.[slot] ?? null;
+      const iconSrc = item?.icon;
+
+      if (typeof iconSrc === "string" && iconSrc.length > 0) {
+        const icon = getHotbarIcon(iconSrc);
+        if (icon && icon.complete && icon.naturalWidth > 0) {
+          // 內縮 padding，避免貼到邊框
+          const pad = 6;
+          const iw = size - pad * 2;
+          const ih = size - pad * 2;
+          ctx.save();
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(icon, x + pad, y + pad, iw, ih);
+          ctx.restore();
+        }
+      }
+    }
+
     // 標籤：顯示在格子下方（白色底框），V 與數字同一排
     ctx.save();
 
@@ -357,6 +380,24 @@ function drawHotbar() {
 
     ctx.restore();
   }
+function getHotbarIcon(src) {
+  if (!src) return null;
+
+  const cached = hotbarIconCache.get(src);
+  if (cached) return cached;
+
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    // no-op: complete/naturalWidth will be valid
+  };
+  img.onerror = () => {
+    console.error("hotbar icon load failed:", src);
+  };
+
+  hotbarIconCache.set(src, img);
+  return img;
+}
 
   ctx.restore();
 }
