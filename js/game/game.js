@@ -159,6 +159,12 @@ function createWeaponInstance(def) {
     recoilPitch: 0, // 往上踢（弧度，累積）
     recoilYaw: 0,   // 左右偏（弧度，累積）
     recoilSide: (Math.random() < 0.5 ? -1 : 1), // 目前偏好方向：-1=左, +1=右
+
+    // 最近一次後座力 kick 的時間（用來做停火回正延遲）
+    recoilLastKickAt: 0,
+
+    // 停火後延遲多久才開始回正（ms）— 想更難壓就調大
+    recoilRecoverDelayMs: 220,
   };
 }
 
@@ -213,16 +219,30 @@ function applyRecoilKick(w, stats, aimProgress) {
   w.recoilPitch += pitchKick;
   w.recoilYaw += yawKick;
 
+  // 記錄最後一次 kick 的時間，供回正延遲使用
+  w.recoilLastKickAt = performance.now();
+
   return { pitchKick, yawKick };
 }
 
-function recoverRecoil(w, dt, aimProgress) {
+function recoverRecoil(w, dt, aimProgress, now) {
   if (!w) return;
 
+  // 停火後先延遲一小段時間再開始回正（更難壓槍）
+  const delay = (typeof w.recoilRecoverDelayMs === "number") ? w.recoilRecoverDelayMs : 0;
+  if (delay > 0) {
+    const last = (typeof w.recoilLastKickAt === "number") ? w.recoilLastKickAt : 0;
+    if (now > 0 && (now - last) < delay) {
+      return;
+    }
+  }
+
   const t = clamp01(aimProgress ?? 0);
-  // 開鏡時回正稍微慢一點點（更像壓槍），你之後也可以反過來做
-  const recoverPitch = (6.5 - 1.0 * t); // rad/s
-  const recoverYaw = (7.5 - 1.2 * t);   // rad/s
+
+  // 回正速度整體調慢：數值越小＝回正越慢＝壓槍更難
+  // 開鏡時再稍微更慢一點（讓 ADS 也需要自己控制）
+  const recoverPitch = (3.2 - 0.6 * t); // rad/s
+  const recoverYaw = (3.6 - 0.7 * t);   // rad/s
 
   const dp = recoverPitch * dt;
   const dy = recoverYaw * dt;
@@ -561,7 +581,7 @@ function loop() {
 
   // ===== Recoil recovery (Step A) =====
   if (player.weapon) {
-    recoverRecoil(player.weapon, dt, window.__aimProgress ?? 0);
+    recoverRecoil(player.weapon, dt, window.__aimProgress ?? 0, now);
   }
 
   updateReload(player, now);
