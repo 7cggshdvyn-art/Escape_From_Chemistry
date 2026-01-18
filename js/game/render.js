@@ -210,7 +210,11 @@ export function renderFrame(player, fireVisual = {}) {
     // 经验值：base 让最小 gap 不会太小，k 控制不同枪的差异
     const base = 3;
     const k = 0.19;
-    const targetGap = base + k * (aiming ? aimSpread : hipSpread);
+
+    // 開鏡時再額外縮近一點（純 UI 手感）
+    const adsBonus = 1.2; // 數字越大，開鏡越緊
+    const spreadVal = aiming ? aimSpread : hipSpread;
+    const targetGap = base + k * spreadVal - (aiming ? adsBonus : 0);
 
     // 平滑（lerp）避免突然跳动
     if (crossGapPx == null) {
