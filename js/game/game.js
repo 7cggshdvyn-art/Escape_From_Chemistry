@@ -145,15 +145,12 @@ function createWeaponInstance(def) {
     isReloading: false,
     reloadEndAt: 0,
     lastShotAt: 0,
+
+    // ===== Recoil state (Step A: affects shot direction only) =====
+    recoilPitch: 0, // 往上踢（弧度，累積）
+    recoilYaw: 0,   // 左右偏（弧度，累積）
+    recoilSide: (Math.random() < 0.5 ? -1 : 1), // 目前偏好方向：-1=左, +1=右
   };
-}
-
-function shotIntervalMs(fireRate) {
-  return fireRate > 0 ? 1000 / fireRate : 999999;
-}
-
-function lerp(a, b, t) {
-  return a + (b - a) * t;
 }
 
 // 在半徑 r 的圓內取均勻隨機點（避免集中在外圈）
@@ -163,6 +160,66 @@ function randomPointInCircle(r) {
   const u = Math.random();
   const rr = Math.sqrt(u) * r;
   return { x: Math.cos(a) * rr, y: Math.sin(a) * rr };
+}
+
+// ===== Recoil helpers =====
+// 你 data_rifle.js 的 recoil 數值偏大，先用比例換算成弧度（之後你想改成角度制也容易）
+const RECOIL_TO_RAD = 0.00075; // 調整後座力手感就改這個比例
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
+
+function approach(current, target, maxDelta) {
+  if (current < target) return Math.min(current + maxDelta, target);
+  return Math.max(current - maxDelta, target);
+}
+
+function applyRecoilKick(w, stats, aimProgress) {
+  if (!w) return { pitchKick: 0, yawKick: 0 };
+
+  const r = stats?.recoil;
+  const vRaw = (typeof r?.vertical === "number") ? r.vertical : 0;
+  const hRaw = (typeof r?.horizontal === "number") ? r.horizontal : 0;
+
+  // 開鏡越穩：kick 略小（先用很保守的比例，不影響你原本平衡太多）
+  const t = clamp01(aimProgress ?? 0);
+  const adsStability = 1 - 0.15 * t; // 0~1：開鏡最多減少 15%
+
+  // 每發有一點隨機浮動，但不會亂飛
+  const vJitter = 0.8 + Math.random() * 0.4; // 0.8~1.2
+  const hJitter = 0.75 + Math.random() * 0.5; // 0.75~1.25
+
+  const pitchKick = vRaw * RECOIL_TO_RAD * vJitter * adsStability;
+  const yawKickBase = hRaw * RECOIL_TO_RAD * hJitter * adsStability;
+
+  // 左右機率：以「偏好方向」為主，小機率換邊（比較像真槍蛇形）
+  const swapChance = 0.18; // 想更常左右換邊就調大
+  if (Math.random() < swapChance) {
+    w.recoilSide *= -1;
+  }
+
+  const yawKick = yawKickBase * w.recoilSide;
+
+  w.recoilPitch += pitchKick;
+  w.recoilYaw += yawKick;
+
+  return { pitchKick, yawKick };
+}
+
+function recoverRecoil(w, dt, aimProgress) {
+  if (!w) return;
+
+  const t = clamp01(aimProgress ?? 0);
+  // 開鏡時回正稍微慢一點點（更像壓槍），你之後也可以反過來做
+  const recoverPitch = (6.5 - 1.0 * t); // rad/s
+  const recoverYaw = (7.5 - 1.2 * t);   // rad/s
+
+  const dp = recoverPitch * dt;
+  const dy = recoverYaw * dt;
+
+  w.recoilPitch = approach(w.recoilPitch, 0, dp);
+  w.recoilYaw = approach(w.recoilYaw, 0, dy);
 }
 
 let mouseX = 0;
@@ -338,20 +395,27 @@ function tryFire(player, now) {
   const shotDy = targetY - player.y;
   const shotAngle = Math.atan2(shotDy, shotDx);
 
-  // 角色面向仍然跟著滑鼠（手感比較直覺）；子彈方向用 shotAngle
+  // 角色面向仍然跟著滑鼠（手感比較直覺）
   player.angle = baseAngle;
 
-  // 先把射擊用的角度/目標點暴露出去（之後你想讓紅線顯示散布就能直接用）
-  window.__lastShotAngle = shotAngle;
-  window.__lastShotTargetX = targetX;
-  window.__lastShotTargetY = targetY;
+  // ===== Recoil (Step A): 只影響「子彈方向」 =====
+  const apRecoil = window.__aimProgress ?? 0;
+  const kick = applyRecoilKick(w, s, apRecoil);
 
-  if (playerChar && playerChar.combat) {
-    // 这里只是预留接口：之后命中计算会用到
-    // const dmgMultiplier = playerChar.combat.gunDamageMultiplier;
-  }
+  // 注意：畫面座標 y 向下為正；「往上踢」應該讓角度往上偏，所以是減去 recoilPitch
+  const shotAngleFinal = shotAngle + w.recoilYaw - w.recoilPitch;
 
-  console.log("FIRE", w.def.id, "ammo", w.ammoInMag, "shotAngle", shotAngle);
+  // 讓 target 也跟著角度修正（保留原本距離，方向改成含後座力的方向）
+  const dist = Math.max(1, Math.hypot(shotDx, shotDy));
+  const finalTargetX = player.x + Math.cos(shotAngleFinal) * dist;
+  const finalTargetY = player.y + Math.sin(shotAngleFinal) * dist;
+
+  // 先把射擊用的角度/目標點暴露出去（之後你想讓紅線顯示實際彈道就能直接用）
+  window.__lastShotAngle = shotAngleFinal;
+  window.__lastShotTargetX = finalTargetX;
+  window.__lastShotTargetY = finalTargetY;
+
+  console.log("FIRE", w.def.id, "ammo", w.ammoInMag, "shotAngle", shotAngleFinal, "kick", kick);
 }
 
 
@@ -485,6 +549,11 @@ function loop() {
   handleRoll(player);
   updateAction(now);
   player.update(dt);
+
+  // ===== Recoil recovery (Step A) =====
+  if (player.weapon) {
+    recoverRecoil(player.weapon, dt, window.__aimProgress ?? 0);
+  }
 
   updateReload(player, now);
   handleReload(player, now);
