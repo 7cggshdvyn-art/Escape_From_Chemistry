@@ -20,6 +20,16 @@ let crossGapPx = null; // 當前四段距離（px），用來做平滑動畫
 let aimProgress = 0; // 0~1
 let lastRenderAt = 0;
 
+// ===== Recoil visual (crosshair kick) =====
+let recoilVisX = 0; // px
+let recoilVisY = 0; // px
+
+// 後座力弧度 -> 像素 的縮放（想更明顯就調大）
+const RECOIL_VIS_PX_PER_RAD = 260;
+
+// 視覺回正速度（越大回得越快）
+const RECOIL_VIS_RETURN = 18;
+
 // 鼠标坐标
 let mouseX = 0;
 let mouseY = 0;
@@ -204,8 +214,28 @@ export function renderFrame(player, fireVisual = {}) {
     const dt = (lastRenderAt > 0) ? Math.min(0.05, (t - lastRenderAt) / 1000) : 0;
     lastRenderAt = t;
 
-    const cx = mouseX;
-    const cy = mouseY;
+    // ===== 把後座力反映到準心（視覺） =====
+    const wInst = player?.weapon;
+    const recoilPitch = (wInst && typeof wInst.recoilPitch === "number") ? wInst.recoilPitch : 0;
+    const recoilYaw = (wInst && typeof wInst.recoilYaw === "number") ? wInst.recoilYaw : 0;
+
+    // 目標偏移（px）：左右 = yaw；往上踢 = pitch（畫面 y 向下為正，所以是負號）
+    const targetRecoilX = recoilYaw * RECOIL_VIS_PX_PER_RAD;
+    const targetRecoilY = -recoilPitch * RECOIL_VIS_PX_PER_RAD;
+
+    // 平滑：避免每發跳動太生硬（dt 已在上面算好，單位秒）
+    if (dt > 0) {
+      const k = Math.min(1, dt * RECOIL_VIS_RETURN);
+      recoilVisX += (targetRecoilX - recoilVisX) * k;
+      recoilVisY += (targetRecoilY - recoilVisY) * k;
+    } else {
+      recoilVisX = targetRecoilX;
+      recoilVisY = targetRecoilY;
+    }
+
+    // 你真正看到的準心中心點（滑鼠 + 後座力偏移）
+    const cx = mouseX + recoilVisX;
+    const cy = mouseY + recoilVisY;
 
     const aimingRaw = window.__aiming === true;
     const weaponStats = player?.weapon?.def?.stats;
@@ -244,8 +274,12 @@ export function renderFrame(player, fireVisual = {}) {
     const base = 3;
     const k = 0.19;
     const adsBonus = 1.2; // 數字越大，開鏡越緊
+    // 後座力越大，四段越稍微撐開（視覺更明顯；不影響實際彈道）
+    const recoilMag = Math.min(1.25, Math.hypot(recoilVisX, recoilVisY) / 120);
+    const recoilGapBoost = 2.2 * recoilMag;
+
     // 注意：spreadVal 已經是 hip->aim 的平滑混合
-    const targetGap = base + k * spreadVal - (aimProgress > 0 ? adsBonus * aimProgress : 0);
+    const targetGap = base + k * spreadVal - (aimProgress > 0 ? adsBonus * aimProgress : 0) + recoilGapBoost;
 
     // 平滑（lerp）避免突然跳动
     if (crossGapPx == null) {
