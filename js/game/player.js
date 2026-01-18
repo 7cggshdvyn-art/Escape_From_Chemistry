@@ -5,6 +5,9 @@ export const player = {
   y: 100,
   angle: 0, // 初始朝向：向右（0 弧度）
 
+  // ===== 像素比例尺 =====
+  PPM: 20, // 1 meter = 20 pixels
+
   // ===== 基础移动参数（单位：m/s 或 m） =====
   walkSpeed: 4.0,
   runSpeed: 7.8,
@@ -22,7 +25,7 @@ export const player = {
 
     // ===== 翻滚中 =====
     if (this.isRolling) {
-      const speed = this.rollDistance / this.rollDuration; // m/s
+      const speed = (this.rollDistance / this.rollDuration) * this.PPM; // px/s
       this.x += this.rollDirX * speed * dt;
       this.y += this.rollDirY * speed * dt;
 
@@ -52,7 +55,7 @@ export const player = {
 
     // 跑步 or 走路
     const isRunning = keys.shift === true;
-    const speed = isRunning ? this.runSpeed : this.walkSpeed;
+    const speed = (isRunning ? this.runSpeed : this.walkSpeed) * this.PPM; // px/s
 
     this.x += dx * speed * dt;
     this.y += dy * speed * dt;
