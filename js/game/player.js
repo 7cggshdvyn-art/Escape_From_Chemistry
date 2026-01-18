@@ -5,14 +5,11 @@ export const player = {
   y: 100,
   angle: 0, // 初始朝向：向右（0 弧度）
 
-  // ===== 像素比例尺 =====
-  PPM: 50, // 1 meter = 20 pixels
-
   // ===== 基础移动参数（单位：m/s 或 m） =====
   walkSpeed: 4.0,
   runSpeed: 7.8,
   rollDistance: 3.0,
-  rollDuration: 0.5, // 秒
+  rollDuration: 0.8, // 秒
 
   // ===== 翻滚状态 =====
   isRolling: false,
@@ -25,7 +22,7 @@ export const player = {
 
     // ===== 翻滚中 =====
     if (this.isRolling) {
-      const speed = (this.rollDistance / this.rollDuration) * this.PPM; // px/s
+      const speed = this.rollDistance / this.rollDuration; // m/s
       this.x += this.rollDirX * speed * dt;
       this.y += this.rollDirY * speed * dt;
 
@@ -55,7 +52,20 @@ export const player = {
 
     // 跑步 or 走路
     const isRunning = keys.shift === true;
-    const speed = (isRunning ? this.runSpeed : this.walkSpeed) * this.PPM; // px/s
+    let speed = (isRunning ? this.runSpeed : this.walkSpeed) * 50; // px/s
+
+    // ===== 武器移动系数 =====
+    if (this.weapon && this.weapon.def && this.weapon.def.stats) {
+      const stats = this.weapon.def.stats;
+      // 已完成开镜 → 使用 aimSpeedCoef
+      if (window.__aimProgress >= 0.85 && typeof stats.aimSpeedCoef === "number") {
+        speed *= stats.aimSpeedCoef;
+      }
+      // 腰射 / 未开镜 → 使用 moveSpeedCoef
+      else if (typeof stats.moveSpeedCoef === "number") {
+        speed *= stats.moveSpeedCoef;
+      }
+    }
 
     this.x += dx * speed * dt;
     this.y += dy * speed * dt;

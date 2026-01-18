@@ -53,6 +53,19 @@ function shotIntervalMs(fireRate) {
   return fireRate > 0 ? 1000 / fireRate : 999999;
 }
 
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+// 在半徑 r 的圓內取均勻隨機點（避免集中在外圈）
+function randomPointInCircle(r) {
+  if (r <= 0) return { x: 0, y: 0 };
+  const a = Math.random() * Math.PI * 2;
+  const u = Math.random();
+  const rr = Math.sqrt(u) * r;
+  return { x: Math.cos(a) * rr, y: Math.sin(a) * rr };
+}
+
 let mouseX = 0;
 let mouseY = 0;
 let hasMouse = false;
@@ -203,16 +216,43 @@ function tryFire(player, now) {
   // 触发射击视觉（给 render 用）
   lastShotVisualAt = now;
 
-  const dx = mouseX - player.x;
-  const dy = mouseY - player.y;
-  player.angle = Math.atan2(dy, dx);
+  // ===== 真正的散布：射擊方向會依 hipSpread/aimSpread 隨機偏移 =====
+  // 注意：這裡先用「像素半徑」理解 spread（之後你要改成角度制也很容易）
+  const baseDx = mouseX - player.x;
+  const baseDy = mouseY - player.y;
+  const baseAngle = Math.atan2(baseDy, baseDx);
+
+  const sHip = (typeof s.hipSpread === "number") ? s.hipSpread : 0;
+  const sAim = (typeof s.aimSpread === "number") ? s.aimSpread : 0;
+
+  // 開鏡進度（0~1）用來讓散布從 hip → aim 平滑過渡
+  const ap2 = window.__aimProgress ?? 0;
+  const t = Math.max(0, Math.min(1, ap2));
+  const spreadRadius = lerp(sHip, sAim, t);
+
+  // 對滑鼠目標點做隨機偏移（像素）
+  const off = randomPointInCircle(spreadRadius);
+  const targetX = mouseX + off.x;
+  const targetY = mouseY + off.y;
+
+  const shotDx = targetX - player.x;
+  const shotDy = targetY - player.y;
+  const shotAngle = Math.atan2(shotDy, shotDx);
+
+  // 角色面向仍然跟著滑鼠（手感比較直覺）；子彈方向用 shotAngle
+  player.angle = baseAngle;
+
+  // 先把射擊用的角度/目標點暴露出去（之後你想讓紅線顯示散布就能直接用）
+  window.__lastShotAngle = shotAngle;
+  window.__lastShotTargetX = targetX;
+  window.__lastShotTargetY = targetY;
 
   if (playerChar && playerChar.combat) {
     // 这里只是预留接口：之后命中计算会用到
     // const dmgMultiplier = playerChar.combat.gunDamageMultiplier;
   }
 
-  console.log("FIRE", w.def.id, "ammo", w.ammoInMag);
+  console.log("FIRE", w.def.id, "ammo", w.ammoInMag, "shotAngle", shotAngle);
 }
 
 
