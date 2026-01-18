@@ -6,7 +6,7 @@ export const player = {
   angle: 0, // 初始朝向：向右（0 弧度）
 
   // ===== 像素比例尺 =====
-  PPM: 20, // 1 meter = 20 pixels
+  PPM: 50, // 1 meter = 20 pixels
 
   // ===== 基础移动参数（单位：m/s 或 m） =====
   walkSpeed: 4.0,
