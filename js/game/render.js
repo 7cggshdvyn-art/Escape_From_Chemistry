@@ -229,6 +229,9 @@ export function renderFrame(player, fireVisual = {}) {
       }
     }
 
+    // 對外暴露：讓 input/game 讀到開鏡完成度（不影響現有行為）
+    window.__aimProgress = aimProgress;
+
     // 以進鏡進度混合散布（純 UI）
     const spreadVal = hipSpread + (aimSpread - hipSpread) * aimProgress;
 

@@ -125,8 +125,9 @@ function equipRifle(player, rifleId) {
 }
 
 function tryFire(player, now) {
-  // 開鏡時不允許射擊
-  if (window.__aiming === true) return;
+  // 開鏡進行中不允許射擊；開鏡完成後允許 ADS 射擊
+  const ap = window.__aimProgress ?? 0;
+  if (window.__aiming === true && ap < 0.85) return;
 
   const firing = (window.__firing === true);
   if (!firing || !hasMouse) return;

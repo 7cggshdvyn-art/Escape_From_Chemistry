@@ -61,6 +61,12 @@ window.__hotbarSelected = 1;
 // game.js 會在每幀讀取並消耗它
 window.__reloadRequested = false;
 
+// 開鏡過程判定：render.js 會同步 window.__aimProgress（0~1）
+function isAimingTransition() {
+  const ap = window.__aimProgress ?? 0;
+  return (window.__aiming === true) && (ap < 0.85);
+}
+
 // 把各种键名统一映射成 up/down/left/right
 function mapKeyToDir(key) {
   // WASD
@@ -86,8 +92,9 @@ window.addEventListener("keydown", (e) => {
   // 方向键：ArrowLeft=开火（等同滑鼠左键），ArrowRight=瞄准（等同滑鼠右键）
   if (!uiFocus) {
     if (e.key === "ArrowLeft") {
-      // 開鏡中不允許射擊；且若被鎖住必須重新按下
-      if (window.__aiming === true || window.__fireLock === true) {
+      // 開鏡「途中」不允許射擊；開鏡完成後允許 ADS 射擊
+      // 且若被鎖住必須重新按下
+      if (isAimingTransition() || window.__fireLock === true) {
         window.__firing = false;
         e.preventDefault();
         return;
@@ -182,8 +189,9 @@ window.addEventListener("contextmenu", (e) => {
 // ===== 左键射击（同步到 __firing） =====
 window.addEventListener("mousedown", (e) => {
   if (e.button === 0 && !uiFocus) {
-    // 開鏡中不允許射擊；且若被鎖住必須重新按下
-    if (window.__aiming === true || window.__fireLock === true) {
+    // 開鏡「途中」不允許射擊；開鏡完成後允許 ADS 射擊
+    // 且若被鎖住必須重新按下
+    if (isAimingTransition() || window.__fireLock === true) {
       window.__firing = false;
       return;
     }
