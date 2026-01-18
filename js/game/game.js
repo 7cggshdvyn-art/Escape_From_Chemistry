@@ -250,6 +250,13 @@ function recoverRecoil(w, dt, aimProgress, now) {
     }
   }
 
+    // ===== 手動瞄準優先：只要玩家最近有移動滑鼠，就暫停自動回正 =====
+if (now > 0 && (now - lastMouseMoveAt) < MANUAL_AIM_HOLD_MS) {
+  // 玩家正在手動控槍：不要回正，且不要鎖定 hold
+  w.recoilRecoverHolding = false;
+  return;
+}
+
   // 延遲結束後第一次開始回正時，鎖定「停止射擊那一刻」的 recoil 作為 hold
   if (w.recoilRecoverHolding !== true) {
     w.recoilRecoverHoldPitch = w.recoilPitch;
@@ -280,7 +287,17 @@ function recoverRecoil(w, dt, aimProgress, now) {
 let mouseX = 0;
 let mouseY = 0;
 let hasMouse = false;
-// let isMouseDown = false;  // Removed as per instruction
+
+// ===== Manual aim priority (mouse moved => pause recoil auto-return) =====
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastMouseMoveAt = 0; // ms
+
+// 只要滑鼠位移超過這個門檻，就視為玩家正在手動控槍
+const MANUAL_AIM_MOVE_THRESHOLD_PX = 1; // px
+
+// 滑鼠停止後多久才允許 recoil 開始自動回正
+const MANUAL_AIM_HOLD_MS = 120; // ms
 
 // ===== Shooting visual state =====
 export let lastShotVisualAt = 0; // ms
@@ -319,10 +336,23 @@ export function startGame() {
   }
 
   window.addEventListener("mousemove", (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    hasMouse = true;
-  });
+  const nx = e.clientX;
+  const ny = e.clientY;
+
+  mouseX = nx;
+  mouseY = ny;
+  hasMouse = true;
+
+  // 偵測滑鼠位移（用 L1 距離避免 sqrt）
+  const dx = Math.abs(nx - lastMouseX);
+  const dy = Math.abs(ny - lastMouseY);
+  if ((dx + dy) >= MANUAL_AIM_MOVE_THRESHOLD_PX) {
+    lastMouseMoveAt = performance.now();
+  }
+
+  lastMouseX = nx;
+  lastMouseY = ny;
+});
 
   window.addEventListener("mousedown", (e) => {
     if (e.button === 0) {
@@ -394,6 +424,15 @@ function equipRifle(player, rifleId) {
 
   // 兼容：若不是從 hotbar 裝備，仍可直接建立 instance
   player.weapon = createWeaponInstance(def);
+}
+function updatePlayerFacingToMouse(player) {
+  // 走 A：槍口/箭頭永遠指向滑鼠（最直覺）
+  if (!hasMouse) return;
+  if (isUIFocus()) return;
+
+  const dx = mouseX - player.x;
+  const dy = mouseY - player.y;
+  player.angle = Math.atan2(dy, dx);
 }
 
 function tryFire(player, now) {
@@ -601,14 +640,17 @@ function loop() {
   // 依 hotbar 選取同步目前裝備（為未來切槍預留）
   syncEquippedWeaponFromHotbar(player);
 
-  handleRoll(player);
-  updateAction(now);
-  player.update(dt);
+    handleRoll(player);
+updateAction(now);
+player.update(dt);
 
-  // ===== Recoil recovery (Step A) =====
-  if (player.weapon) {
-    recoverRecoil(player.weapon, dt, window.__aimProgress ?? 0, now);
-  }
+// A：不管有沒有開火，槍口/箭頭都要跟著滑鼠
+updatePlayerFacingToMouse(player);
+
+// ===== Recoil recovery (Step A) =====
+if (player.weapon) {
+  recoverRecoil(player.weapon, dt, window.__aimProgress ?? 0, now);
+}
 
   updateReload(player, now);
   handleReload(player, now);
