@@ -164,7 +164,15 @@ function createWeaponInstance(def) {
     recoilLastKickAt: 0,
 
     // 停火後延遲多久才開始回正（ms）— 想更難壓就調大
-    recoilRecoverDelayMs: 220,
+    recoilRecoverDelayMs: 120,
+
+    // B 模式：回正只回到殘留比例（0~1）；0 = 不自動回、1 = 全自動回到 0
+    recoilRecoverKeep: 0.35,
+
+    // 用來鎖定「停止射擊那一刻」的回正目標（避免每幀重算目標導致最後還是回到 0）
+    recoilRecoverHoldPitch: 0,
+    recoilRecoverHoldYaw: 0,
+    recoilRecoverHolding: false,
   };
 }
 
@@ -222,6 +230,9 @@ function applyRecoilKick(w, stats, aimProgress) {
   // 記錄最後一次 kick 的時間，供回正延遲使用
   w.recoilLastKickAt = performance.now();
 
+  // 一旦又 kick，代表繼續連射/再次射擊：下一次回正需要重新鎖定 hold
+  w.recoilRecoverHolding = false;
+
   return { pitchKick, yawKick };
 }
 
@@ -233,8 +244,17 @@ function recoverRecoil(w, dt, aimProgress, now) {
   if (delay > 0) {
     const last = (typeof w.recoilLastKickAt === "number") ? w.recoilLastKickAt : 0;
     if (now > 0 && (now - last) < delay) {
+      // 還在延遲期：不回正，且不要鎖定 hold
+      w.recoilRecoverHolding = false;
       return;
     }
+  }
+
+  // 延遲結束後第一次開始回正時，鎖定「停止射擊那一刻」的 recoil 作為 hold
+  if (w.recoilRecoverHolding !== true) {
+    w.recoilRecoverHoldPitch = w.recoilPitch;
+    w.recoilRecoverHoldYaw = w.recoilYaw;
+    w.recoilRecoverHolding = true;
   }
 
   const t = clamp01(aimProgress ?? 0);
@@ -247,8 +267,14 @@ function recoverRecoil(w, dt, aimProgress, now) {
   const dp = recoverPitch * dt;
   const dy = recoverYaw * dt;
 
-  w.recoilPitch = approach(w.recoilPitch, 0, dp);
-  w.recoilYaw = approach(w.recoilYaw, 0, dy);
+  const keep = (typeof w.recoilRecoverKeep === "number") ? clamp01(w.recoilRecoverKeep) : 0;
+
+  // B 模式：回正只回到 hold 的一部分殘留（例如 keep=0.35 代表保留 35%）
+  const targetPitch = w.recoilRecoverHoldPitch * keep;
+  const targetYaw = w.recoilRecoverHoldYaw * keep;
+
+  w.recoilPitch = approach(w.recoilPitch, targetPitch, dp);
+  w.recoilYaw = approach(w.recoilYaw, targetYaw, dy);
 }
 
 let mouseX = 0;
