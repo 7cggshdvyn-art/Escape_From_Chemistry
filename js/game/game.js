@@ -12,6 +12,105 @@ const getReloadRequested = () => window.__reloadRequested === true;
 let running = false;
 let lastFrameAt = 0;
 
+// ===== 通用動作（進度條）控制器 =====
+// render.js 會讀 window.__actionBar 來畫 UI
+if (!window.__actionBar) {
+  window.__actionBar = { active: false, progress: 0, label: "", cancelText: "X 取消動作" };
+}
+let currentAction = null; // { type, startAt, endAt, label, cancelText, canContinue, onCancel, onComplete }
+
+function startAction({
+  type,
+  durationMs,
+  label = "",
+  cancelText = "X 取消動作",
+  canContinue = null,
+  onCancel = null,
+  onComplete = null,
+}) {
+  const now = performance.now();
+  const dur = Math.max(1, durationMs | 0);
+
+  currentAction = {
+    type,
+    startAt: now,
+    endAt: now + dur,
+    label,
+    cancelText,
+    canContinue,
+    onCancel,
+    onComplete,
+  };
+
+  window.__actionBar.active = true;
+  window.__actionBar.progress = 0;
+  window.__actionBar.label = label;
+  window.__actionBar.cancelText = cancelText;
+}
+
+function endActionUI() {
+  window.__actionBar.active = false;
+  window.__actionBar.progress = 0;
+  window.__actionBar.label = "";
+  window.__actionBar.cancelText = "X 取消動作";
+}
+
+function cancelCurrentAction(reason = "") {
+  if (!currentAction) return;
+  const a = currentAction;
+  currentAction = null;
+  endActionUI();
+
+  try {
+    if (typeof a.onCancel === "function") a.onCancel(reason);
+  } catch (err) {
+    console.error("onCancel error", err);
+  }
+}
+
+function completeCurrentAction() {
+  if (!currentAction) return;
+  const a = currentAction;
+  currentAction = null;
+  endActionUI();
+
+  try {
+    if (typeof a.onComplete === "function") a.onComplete();
+  } catch (err) {
+    console.error("onComplete error", err);
+  }
+}
+
+function updateAction(now) {
+  if (!currentAction) return;
+
+  // 先消耗取消請求（一次性）
+  if (window.__actionCancelRequested === true) {
+    window.__actionCancelRequested = false;
+    cancelCurrentAction("cancel");
+    return;
+  }
+
+  // 若狀態不允許（例如跑步/翻滾/切槍/UI 等），直接中斷
+  if (typeof currentAction.canContinue === "function") {
+    if (currentAction.canContinue() !== true) {
+      cancelCurrentAction("interrupt");
+      return;
+    }
+  }
+
+  const total = currentAction.endAt - currentAction.startAt;
+  const t = (now - currentAction.startAt) / total;
+  window.__actionBar.active = true;
+  window.__actionBar.progress = Math.max(0, Math.min(1, t));
+  window.__actionBar.label = currentAction.label;
+  window.__actionBar.cancelText = currentAction.cancelText;
+
+  if (now >= currentAction.endAt) {
+    completeCurrentAction();
+  }
+}
+
 // ===== Inventory / Hotbar (UI will read from here) =====
 function createDefaultInventory() {
   return {
@@ -259,8 +358,25 @@ function tryFire(player, now) {
 function startReload(w, s, reloadSlot) {
   if (w.isReloading) return;
   w.isReloading = true;
-  w.reloadEndAt = performance.now() + s.reloadTime * 1000;
   w.reloadSlot = reloadSlot;
+
+  // 用通用動作系統顯示讀條（可取消、可被狀態打斷）
+  startAction({
+    type: "reload",
+    durationMs: s.reloadTime * 1000,
+    label: "換彈中",
+    cancelText: "X 取消動作",
+    canContinue: () => isReloadWalkOnlyState(player),
+    onCancel: () => {
+      cancelReload(w);
+    },
+    onComplete: () => {
+      // 完成換彈
+      w.isReloading = false;
+      w.reloadSlot = undefined;
+      w.ammoInMag = w.def.stats.magSize;
+    },
+  });
 }
 
 function getSelectedSlotIndex(player) {
@@ -295,6 +411,12 @@ function cancelReload(w) {
   w.reloadEndAt = 0;
   // reloadSlot 用來偵測是否切換了快捷欄
   w.reloadSlot = undefined;
+
+  // 如果目前動作就是換彈，取消時關閉通用進度條
+  if (currentAction && currentAction.type === "reload") {
+    currentAction = null;
+    endActionUI();
+  }
 }
 
 function handleReload(player, now) {
@@ -309,6 +431,9 @@ function handleReload(player, now) {
   if (!selectedItem || selectedItem.type !== "rifle") return;
 
   const w = player.weapon;
+
+  // 目前有其他動作在跑就不開始換彈（避免讀條疊加）
+  if (currentAction) return;
 
   // 只有在「走路狀態」才允許開始換彈
   if (!isReloadWalkOnlyState(player)) return;
@@ -343,16 +468,9 @@ function updateReload(player, now) {
   const w = player.weapon;
   if (!w || !w.isReloading) return;
 
-  // 換彈只允許在走路狀態不中斷；其餘狀態一律中斷
+  // 保險：若狀態不允許，立刻中斷（真正的完成/取消由 action 系統處理）
   if (!isReloadWalkOnlyState(player)) {
     cancelReload(w);
-    return;
-  }
-
-  if (now >= w.reloadEndAt) {
-    w.isReloading = false;
-    w.reloadSlot = undefined;
-    w.ammoInMag = w.def.stats.magSize;
   }
 }
 
@@ -365,6 +483,7 @@ function loop() {
   syncEquippedWeaponFromHotbar(player);
 
   handleRoll(player);
+  updateAction(now);
   player.update(dt);
 
   updateReload(player, now);

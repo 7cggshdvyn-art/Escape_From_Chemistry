@@ -33,6 +33,7 @@ export function setUIFocus(state) {
     window.__firing = false;
     window.__aiming = false;
     window.__fireLock = false;
+    window.__actionCancelRequested = false;
   }
 
   // UI 时显示鼠标，游戏时隐藏鼠标
@@ -65,6 +66,10 @@ window.__reloadRequested = false;
 // ===== 翻滾請求（一次性） =====
 // game.js 會在每幀讀取並消耗它
 window.__rollRequested = false;
+
+// ===== 取消動作請求（一次性） =====
+// game.js 會在每幀讀取並消耗它
+window.__actionCancelRequested = false;
 
 // 開鏡過程判定：render.js 會同步 window.__aimProgress（0~1）
 function isAimingTransition() {
@@ -118,6 +123,15 @@ window.addEventListener("keydown", (e) => {
       e.preventDefault();
       return;
     }
+  }
+
+  // X：取消目前動作（一次性觸發）
+  if (e.key === "x" || e.key === "X") {
+    if (!e.repeat) {
+      window.__actionCancelRequested = true;
+    }
+    e.preventDefault();
+    return;
   }
 
   // 快捷欄切換：1~8 與 V（近戰）
@@ -203,6 +217,7 @@ window.addEventListener("keyup", (e) => {
 // 切出网页时清空按键并强制进入 UI 模式（避免卡键）
 window.addEventListener("blur", () => {
   keys.up = keys.down = keys.left = keys.right = keys.shift = false;
+  window.__actionCancelRequested = false;
 
   // 切出网页时强制进入 UI 模式
   setUIFocus(true);

@@ -321,6 +321,9 @@ export function renderFrame(player, fireVisual = {}) {
 
   // ===== 底部快捷欄（1 2 V 3 4 5 6 7 8） =====
   drawHotbar(player);
+
+  // ===== 通用動作進度條（換彈/互動等共用） =====
+  drawActionBar();
 }
 
 
@@ -530,4 +533,104 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, rr);
   ctx.arcTo(x, y, x + w, y, rr);
   ctx.closePath();
+}
+function drawActionBar() {
+  if (!ctx || !canvas) return;
+
+  const bar = window.__actionBar;
+  if (!bar || bar.active !== true) return;
+
+  const p = Math.max(0, Math.min(1, typeof bar.progress === "number" ? bar.progress : 0));
+  const label = (typeof bar.label === "string") ? bar.label : "";
+  const cancelText = (typeof bar.cancelText === "string" && bar.cancelText.length > 0)
+    ? bar.cancelText
+    : "X 取消動作";
+
+  // 位置：中間偏下，並且在快捷欄上方
+  const hotbarY = canvas.height - 34 - 44; // padBottom=34, size=44（跟 drawHotbar 一致）
+  const centerX = canvas.width / 2 + 120;  // 跟快捷欄同樣向右偏移
+
+  const barW = 260;
+  const barH = 12;
+  const barX = centerX - barW / 2;
+  const barY = Math.min(hotbarY - 26, canvas.height * 0.72); // 盡量落在快捷欄上方
+
+  const radius = 8;
+
+  ctx.save();
+
+  // ===== 底框（暗底） =====
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  roundRect(ctx, barX, barY, barW, barH, radius);
+  ctx.fill();
+
+  // ===== 霓虹藍白藍進度條 =====
+  if (p > 0) {
+    const w = Math.max(2, barW * p);
+
+    // 外藍光
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 180, 255, 0.75)";
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = "rgba(0, 140, 255, 0.85)";
+    roundRect(ctx, barX, barY, w, barH, radius);
+    ctx.fill();
+    ctx.restore();
+
+    // 中白亮帶（讓它看起來像霓虹）
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+    const innerPad = 2;
+    const innerH = Math.max(2, barH - innerPad * 2);
+    roundRect(ctx, barX + innerPad, barY + innerPad, Math.max(0, w - innerPad * 2), innerH, radius - 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 內藍邊（讓白帶不會太平）
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = "rgba(0, 160, 255, 0.95)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, barX + 0.5, barY + 0.5, w - 1, barH - 1, radius);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // =====（可選）上方 label =====
+  if (label) {
+    ctx.save();
+    ctx.font = "14px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+    ctx.fillText(label, centerX, barY - 8);
+    ctx.restore();
+  }
+
+  // ===== 下方取消提示 =====
+  ctx.save();
+  ctx.font = "13px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  // 文字底框（淡白）
+  const padX = 10;
+  const padY = 6;
+  const tw = ctx.measureText(cancelText).width;
+  const boxW = Math.max(88, tw + padX * 2);
+  const boxH = 22;
+  const boxX = centerX - boxW / 2;
+  const boxY = barY + barH + 10;
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+  roundRect(ctx, boxX, boxY, boxW, boxH, 6);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.92)";
+  ctx.fillText(cancelText, centerX, boxY + (boxH - 13) / 2 + 1);
+  ctx.restore();
+
+  ctx.restore();
 }
