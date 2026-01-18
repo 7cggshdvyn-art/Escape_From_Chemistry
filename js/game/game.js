@@ -104,15 +104,42 @@ export function startGame() {
   });
 
 
-  equipRifle(player, "AK-47");
-
   // 根據目前選取的 hotbar slot 裝備武器（先支援 rifle）
-  const sel = player.inventory?.hotbar?.[player.activeHotbarSlot];
-  if (sel && sel.type === "rifle") {
-    equipRifle(player, sel.id);
-  }
+  syncEquippedWeaponFromHotbar(player);
 
   requestAnimationFrame(loop);
+}
+
+function getSelectedHotbarSlot(player) {
+  const selectedSlot = (typeof window.__hotbarSelected === "number")
+    ? window.__hotbarSelected
+    : (player.activeHotbarSlot ?? 1);
+  return selectedSlot;
+}
+
+function syncEquippedWeaponFromHotbar(player) {
+  const slot = getSelectedHotbarSlot(player);
+  const item = player.inventory?.hotbar?.[slot] ?? null;
+
+  // 沒物品或不是槍：清空目前武器（之後切槍會用到）
+  if (!item || item.type !== "rifle") {
+    player.weapon = null;
+    return;
+  }
+
+  // 若 slot 尚未有 instance，就用 id 建立並綁定（保留狀態用）
+  if (!item.instance) {
+    const def = getRifleDefById(item.id);
+    if (!def) {
+      console.error("Rifle not found:", item.id);
+      player.weapon = null;
+      return;
+    }
+    item.instance = createWeaponInstance(def);
+  }
+
+  // 讓 player.weapon 指向該 slot 的 instance
+  player.weapon = item.instance;
 }
 
 function equipRifle(player, rifleId) {
@@ -121,6 +148,17 @@ function equipRifle(player, rifleId) {
     console.error("Rifle not found:", rifleId);
     return;
   }
+
+  // 盡量把 instance 綁到目前選取的 hotbar 槽位（保留狀態）
+  const slot = getSelectedHotbarSlot(player);
+  const item = player.inventory?.hotbar?.[slot] ?? null;
+  if (item && item.type === "rifle" && item.id === rifleId) {
+    if (!item.instance) item.instance = createWeaponInstance(def);
+    player.weapon = item.instance;
+    return;
+  }
+
+  // 兼容：若不是從 hotbar 裝備，仍可直接建立 instance
   player.weapon = createWeaponInstance(def);
 }
 
@@ -207,6 +245,9 @@ function updateReload(player, now) {
 
 function loop() {
   const now = performance.now();
+
+  // 依 hotbar 選取同步目前裝備（為未來切槍預留）
+  syncEquippedWeaponFromHotbar(player);
 
   player.update();
 
