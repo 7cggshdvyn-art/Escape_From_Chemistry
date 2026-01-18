@@ -194,7 +194,7 @@ function tryFire(player, now) {
   if (!firing || !hasMouse) return;
 
   // 只有當目前選到的快捷欄槽位是槍（rifle）時才允許射擊
-  const selectedSlot = (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : (player.activeHotbarSlot ?? 1);
+  const selectedSlot = getSelectedSlotIndex(player);
   const selectedItem = player.inventory?.hotbar?.[selectedSlot] ?? null;
   if (!selectedItem || selectedItem.type !== "rifle") return;
 
@@ -256,10 +256,45 @@ function tryFire(player, now) {
 }
 
 
-function startReload(w, s) {
+function startReload(w, s, reloadSlot) {
   if (w.isReloading) return;
   w.isReloading = true;
   w.reloadEndAt = performance.now() + s.reloadTime * 1000;
+  w.reloadSlot = reloadSlot;
+}
+
+function getSelectedSlotIndex(player) {
+  return (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : (player.activeHotbarSlot ?? 1);
+}
+
+// 只允許在「走路狀態」不中斷換彈：其餘任何狀態都會中斷
+function isReloadWalkOnlyState(player) {
+  if (isUIFocus()) return false;
+
+  // 翻滾/跑步/射擊/瞄準 都視為非走路狀態
+  if (player.isRolling === true) return false;
+  if (keys.shift === true) return false;
+  if (window.__firing === true) return false;
+  if (window.__aiming === true) return false;
+
+  // 切換快捷欄（或不再是槍）也屬於非走路狀態
+  const slot = getSelectedSlotIndex(player);
+  const item = player.inventory?.hotbar?.[slot] ?? null;
+  if (!item || item.type !== "rifle") return false;
+
+  // 若換彈是從某個槽位開始，期間換了槽位也要中斷
+  const w = player.weapon;
+  if (w && w.isReloading && typeof w.reloadSlot === "number" && w.reloadSlot !== slot) return false;
+
+  return true;
+}
+
+function cancelReload(w) {
+  if (!w) return;
+  w.isReloading = false;
+  w.reloadEndAt = 0;
+  // reloadSlot 用來偵測是否切換了快捷欄
+  w.reloadSlot = undefined;
 }
 
 function handleReload(player, now) {
@@ -269,18 +304,21 @@ function handleReload(player, now) {
   if (!getReloadRequested()) return;
   window.__reloadRequested = false;
 
-  // 目前選到的快捷欄必須是槍，才允許換彈
-  const selectedSlot = (typeof window.__hotbarSelected === "number") ? window.__hotbarSelected : (player.activeHotbarSlot ?? 1);
+  const selectedSlot = getSelectedSlotIndex(player);
   const selectedItem = player.inventory?.hotbar?.[selectedSlot] ?? null;
   if (!selectedItem || selectedItem.type !== "rifle") return;
 
   const w = player.weapon;
+
+  // 只有在「走路狀態」才允許開始換彈
+  if (!isReloadWalkOnlyState(player)) return;
+
   if (!w || w.isReloading) return;
 
   const s = w.def.stats;
   if (w.ammoInMag >= s.magSize) return;
 
-  startReload(w, s);
+  startReload(w, s, selectedSlot);
 }
 
 function handleRoll(player) {
@@ -305,8 +343,15 @@ function updateReload(player, now) {
   const w = player.weapon;
   if (!w || !w.isReloading) return;
 
+  // 換彈只允許在走路狀態不中斷；其餘狀態一律中斷
+  if (!isReloadWalkOnlyState(player)) {
+    cancelReload(w);
+    return;
+  }
+
   if (now >= w.reloadEndAt) {
     w.isReloading = false;
+    w.reloadSlot = undefined;
     w.ammoInMag = w.def.stats.magSize;
   }
 }
