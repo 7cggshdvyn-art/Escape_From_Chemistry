@@ -12,7 +12,7 @@ export const player = {
   walkSpeed: 4.0,
   runSpeed: 7.8,
   rollDistance: 3.0,
-  rollDuration: 0.8, // 秒
+  rollDuration: 0.5, // 秒
 
   // ===== 翻滚状态 =====
   isRolling: false,
