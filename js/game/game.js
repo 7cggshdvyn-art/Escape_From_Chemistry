@@ -2,7 +2,7 @@ import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
 
-import { isUIFocus, setUIFocus } from "./input.js";
+import { isUIFocus, setUIFocus, keys } from "./input.js";
 import characterData from "../data/character/data_character.js";
 
 // R 換彈請求（由 input.js 設定）
@@ -10,6 +10,7 @@ const getReloadRequested = () => window.__reloadRequested === true;
 
 
 let running = false;
+let lastFrameAt = 0;
 
 // ===== Inventory / Hotbar (UI will read from here) =====
 function createDefaultInventory() {
@@ -71,6 +72,15 @@ export function startGame() {
   initRender();
   // 進入遊戲時強制回到「遊戲模式」（準星顯示、可移動）
   setUIFocus(false);
+
+  // ===== 套用角色基礎移動參數（來自 data_character.js） =====
+  if (playerChar && playerChar.movement) {
+    if (typeof playerChar.movement.walkSpeed === "number") player.walkSpeed = playerChar.movement.walkSpeed;
+    if (typeof playerChar.movement.runSpeed === "number") player.runSpeed = playerChar.movement.runSpeed;
+    if (typeof playerChar.movement.rollDistance === "number") player.rollDistance = playerChar.movement.rollDistance;
+  }
+  // 翻滾時間先固定 0.8s（之後你要做角色差異再改）
+  player.rollDuration = 0.8;
 
   // 初始化玩家物品（hotbar）——UI 會從這裡讀
   if (!player.inventory) {
@@ -233,6 +243,24 @@ function handleReload(player, now) {
   startReload(w, s);
 }
 
+function handleRoll(player) {
+  // 先消耗翻滾請求，避免「排隊」到之後才觸發
+  if (window.__rollRequested !== true) return;
+  window.__rollRequested = false;
+
+  if (isUIFocus()) return;
+
+  // 以當下移動方向為主；沒方向就交給 player.startRoll 用角色朝向
+  let dx = 0;
+  let dy = 0;
+  if (keys.up) dy -= 1;
+  if (keys.down) dy += 1;
+  if (keys.left) dx -= 1;
+  if (keys.right) dx += 1;
+
+  player.startRoll(dx, dy);
+}
+
 function updateReload(player, now) {
   const w = player.weapon;
   if (!w || !w.isReloading) return;
@@ -245,11 +273,14 @@ function updateReload(player, now) {
 
 function loop() {
   const now = performance.now();
+  const dt = (lastFrameAt > 0) ? Math.min(0.05, (now - lastFrameAt) / 1000) : 0;
+  lastFrameAt = now;
 
   // 依 hotbar 選取同步目前裝備（為未來切槍預留）
   syncEquippedWeaponFromHotbar(player);
 
-  player.update();
+  handleRoll(player);
+  player.update(dt);
 
   updateReload(player, now);
   handleReload(player, now);

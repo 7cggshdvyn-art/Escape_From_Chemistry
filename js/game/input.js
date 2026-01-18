@@ -4,6 +4,7 @@ export const keys = {
   down: false,
   left: false,
   right: false,
+  shift: false, // 跑步（按住）
 };
 
 // ===== 射击 / 瞄准状态（供 render/game 共用） =====
@@ -28,7 +29,7 @@ export function setUIFocus(state) {
 
   // 进入 UI 时：清空移动键，避免松不开
   if (uiFocus) {
-    keys.up = keys.down = keys.left = keys.right = false;
+    keys.up = keys.down = keys.left = keys.right = keys.shift = false;
     window.__firing = false;
     window.__aiming = false;
     window.__fireLock = false;
@@ -60,6 +61,10 @@ window.__hotbarSelected = 1;
 // ===== 換彈請求（一次性） =====
 // game.js 會在每幀讀取並消耗它
 window.__reloadRequested = false;
+
+// ===== 翻滾請求（一次性） =====
+// game.js 會在每幀讀取並消耗它
+window.__rollRequested = false;
 
 // 開鏡過程判定：render.js 會同步 window.__aimProgress（0~1）
 function isAimingTransition() {
@@ -139,6 +144,22 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
+  // Shift：跑步（按住）
+  if (!uiFocus && (e.key === "Shift")) {
+    keys.shift = true;
+    e.preventDefault();
+    return;
+  }
+
+  // Space：翻滾（一次性觸發，按住不連發）
+  if (!uiFocus && (e.code === "Space" || e.key === " ")) {
+    if (!e.repeat) {
+      window.__rollRequested = true;
+    }
+    e.preventDefault();
+    return;
+  }
+
   if (uiFocus) return;
 
   const dir = mapKeyToDir(e.key);
@@ -163,6 +184,13 @@ window.addEventListener("keyup", (e) => {
     return;
   }
 
+  // Shift：放開停止跑步
+  if (e.key === "Shift") {
+    keys.shift = false;
+    e.preventDefault();
+    return;
+  }
+
   if (uiFocus) return;
 
   const dir = mapKeyToDir(e.key);
@@ -174,7 +202,7 @@ window.addEventListener("keyup", (e) => {
 
 // 切出网页时清空按键并强制进入 UI 模式（避免卡键）
 window.addEventListener("blur", () => {
-  keys.up = keys.down = keys.left = keys.right = false;
+  keys.up = keys.down = keys.left = keys.right = keys.shift = false;
 
   // 切出网页时强制进入 UI 模式
   setUIFocus(true);
