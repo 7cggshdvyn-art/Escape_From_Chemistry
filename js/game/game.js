@@ -133,8 +133,17 @@ function createDefaultInventory() {
 const playerChar = characterData.find(c => c.id === "player");
 
 // ===== Rifle system (shared by all rifles) =====
+
 function getRifleDefById(id) {
   return rifleData.find(w => w.id === id) ?? null;
+}
+
+function shotIntervalMs(fireRate) {
+  return (typeof fireRate === "number" && fireRate > 0) ? (1000 / fireRate) : 999999;
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
 }
 
 function createWeaponInstance(def) {
