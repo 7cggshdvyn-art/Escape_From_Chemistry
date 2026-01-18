@@ -25,7 +25,7 @@ let recoilVisX = 0; // px
 let recoilVisY = 0; // px
 
 // 後座力弧度 -> 像素 的縮放（想更明顯就調大）
-const RECOIL_VIS_PX_PER_RAD = 260;
+const RECOIL_VIS_PX_PER_RAD = 500;
 
 // 視覺回正速度（越大回得越快）
 const RECOIL_VIS_RETURN = 18;
