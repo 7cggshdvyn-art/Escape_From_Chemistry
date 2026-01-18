@@ -16,6 +16,10 @@ let crossDotReady = false;
 // ===== Crosshair spread animation (gap lerp) =====
 let crossGapPx = null; // 當前四段距離（px），用來做平滑動畫
 
+// ===== ADS (aim) timing =====
+let aimProgress = 0; // 0~1
+let lastRenderAt = 0;
+
 // 鼠标坐标
 let mouseX = 0;
 let mouseY = 0;
@@ -195,26 +199,50 @@ export function renderFrame(player, fireVisual = {}) {
   // 进入 ESC / 选单(UI focus) 时隐藏准星
   // 规则：腰射不画中点；右键瞄准（window.__aiming === true）才画中点
   if (!isUIFocus()) {
+    // dt（秒）
+    const t = performance.now();
+    const dt = (lastRenderAt > 0) ? Math.min(0.05, (t - lastRenderAt) / 1000) : 0;
+    lastRenderAt = t;
+
     const cx = mouseX;
     const cy = mouseY;
+
+    const aimingRaw = window.__aiming === true;
+    const weaponStats = player?.weapon?.def?.stats;
+
+    const hipSpread = (weaponStats && typeof weaponStats.hipSpread === "number") ? weaponStats.hipSpread : 30;
+    const aimSpread = (weaponStats && typeof weaponStats.aimSpread === "number") ? weaponStats.aimSpread : 10;
+
+    // aimTime：秒（來自 data_rifle.js），越小越快
+    const aimTime = (weaponStats && typeof weaponStats.aimTime === "number" && weaponStats.aimTime > 0)
+      ? weaponStats.aimTime
+      : 0.25;
+
+    // 進鏡進度（0~1）
+    if (dt > 0) {
+      const speed = dt / aimTime;
+      if (aimingRaw) {
+        aimProgress = Math.min(1, aimProgress + speed);
+      } else {
+        // 退鏡稍微快一點點，看起來比較順
+        aimProgress = Math.max(0, aimProgress - speed * 1.25);
+      }
+    }
+
+    // 以進鏡進度混合散布（純 UI）
+    const spreadVal = hipSpread + (aimSpread - hipSpread) * aimProgress;
+
+    // aiming（視覺上）：進度夠了才算真正進鏡，用來控制中點顯示
+    const aiming = aimProgress >= 0.85;
 
     // 之后要做动画会用到：gap 控制四段离中心的距离
     // 规则：用武器数据的 hipSpread / aimSpread 来决定 gap，并做平滑动画
 
-    const aiming = window.__aiming === true;
-        const weaponStats = player?.weapon?.def?.stats;
-    const hipSpread = (weaponStats && typeof weaponStats.hipSpread === "number") ? weaponStats.hipSpread : 30;
-    const aimSpread = (weaponStats && typeof weaponStats.aimSpread === "number") ? weaponStats.aimSpread : 10;
-
-    // 把「散布数值」映射到「像素间距」：纯 UI 显示用
-    // 经验值：base 让最小 gap 不会太小，k 控制不同枪的差异
     const base = 3;
     const k = 0.19;
-
-    // 開鏡時再額外縮近一點（純 UI 手感）
     const adsBonus = 1.2; // 數字越大，開鏡越緊
-    const spreadVal = aiming ? aimSpread : hipSpread;
-    const targetGap = base + k * spreadVal - (aiming ? adsBonus : 0);
+    // 注意：spreadVal 已經是 hip->aim 的平滑混合
+    const targetGap = base + k * spreadVal - (aimProgress > 0 ? adsBonus * aimProgress : 0);
 
     // 平滑（lerp）避免突然跳动
     if (crossGapPx == null) {
