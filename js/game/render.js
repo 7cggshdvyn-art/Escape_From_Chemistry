@@ -548,10 +548,10 @@ function drawActionBar() {
 
   // 位置：中間偏下，並且在快捷欄上方
   const hotbarY = canvas.height - 34 - 44; // padBottom=34, size=44（跟 drawHotbar 一致）
-  const centerX = canvas.width / 2 + 120;  // 跟快捷欄同樣向右偏移
+  const centerX = canvas.width / 2 + 60;  // 跟快捷欄同樣向右偏移
 
-  const barW = 260;
-  const barH = 12;
+  const barW = 180;
+  const barH = 9;
   const barX = centerX - barW / 2;
   const barY = Math.min(hotbarY - 26, canvas.height * 0.72); // 盡量落在快捷欄上方
 
