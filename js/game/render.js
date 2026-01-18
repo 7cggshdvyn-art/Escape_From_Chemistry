@@ -271,21 +271,16 @@ export function renderFrame(player, fireVisual = {}) {
 
     ctx.restore();
 
-    // 中点：只有瞄准才画
+    // 中点：只有瞄准才画（直接用 Canvas 画黑点，不依赖图片）
     if (aiming) {
-      if (crossDotReady) {
-        ctx.save();
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(crossDotImg, cx - dotW / 2, cy - dotH / 2, dotW, dotH);
-        ctx.restore();
-      } else {
-        ctx.save();
-        ctx.fillStyle = "#000000";
-        ctx.beginPath();
-        ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
+      ctx.save();
+      ctx.fillStyle = "#000000";
+      ctx.beginPath();
+      // 半径跟 crossScale 同步（让不同缩放下视觉一致）
+      const r = 2.4 * crossScale;
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   }
 
