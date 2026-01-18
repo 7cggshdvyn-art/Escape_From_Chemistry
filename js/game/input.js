@@ -9,7 +9,10 @@ export const keys = {
 // ===== 射击 / 瞄准状态（供 render/game 共用） =====
 window.__firing = false; // 相当于「滑鼠左键按住」
 window.__aiming = false; // 相当于「滑鼠右键按住」
-// 只有進入遊戲後才允許用 ESC 或 / 切換 UI focus
+
+// ===== 射击锁：用于「按住左键时开镜会取消射击，需重新按下才可继续」 =====
+window.__fireLock = false;
+
 window.__gameStarted = false;
 
 
@@ -28,6 +31,7 @@ export function setUIFocus(state) {
     keys.up = keys.down = keys.left = keys.right = false;
     window.__firing = false;
     window.__aiming = false;
+    window.__fireLock = false;
   }
 
   // UI 时显示鼠标，游戏时隐藏鼠标
@@ -82,11 +86,22 @@ window.addEventListener("keydown", (e) => {
   // 方向键：ArrowLeft=开火（等同滑鼠左键），ArrowRight=瞄准（等同滑鼠右键）
   if (!uiFocus) {
     if (e.key === "ArrowLeft") {
+      // 開鏡中不允許射擊；且若被鎖住必須重新按下
+      if (window.__aiming === true || window.__fireLock === true) {
+        window.__firing = false;
+        e.preventDefault();
+        return;
+      }
       window.__firing = true;
       e.preventDefault();
       return;
     }
     if (e.key === "ArrowRight") {
+      // 開鏡時強制取消射擊；若原本在射擊，需重新按下才可再射
+      if (window.__firing === true) {
+        window.__fireLock = true;
+      }
+      window.__firing = false;
       window.__aiming = true;
       e.preventDefault();
       return;
@@ -130,6 +145,8 @@ window.addEventListener("keyup", (e) => {
   // 方向键：放开时复位
   if (e.key === "ArrowLeft") {
     window.__firing = false;
+    // 放開後解除射擊鎖，下一次按下才會開火
+    window.__fireLock = false;
     e.preventDefault();
     return;
   }
@@ -165,6 +182,11 @@ window.addEventListener("contextmenu", (e) => {
 // ===== 左键射击（同步到 __firing） =====
 window.addEventListener("mousedown", (e) => {
   if (e.button === 0 && !uiFocus) {
+    // 開鏡中不允許射擊；且若被鎖住必須重新按下
+    if (window.__aiming === true || window.__fireLock === true) {
+      window.__firing = false;
+      return;
+    }
     window.__firing = true;
   }
 });
@@ -172,12 +194,19 @@ window.addEventListener("mousedown", (e) => {
 window.addEventListener("mouseup", (e) => {
   if (e.button === 0) {
     window.__firing = false;
+    // 放開後解除射擊鎖，下一次按下才會開火
+    window.__fireLock = false;
   }
 });
 
 window.addEventListener("mousedown", (e) => {
   // 右键按下 → 进入瞄准
   if (e.button === 2 && !uiFocus) {
+    // 開鏡時強制取消射擊；若原本在射擊，需重新按下才可再射
+    if (window.__firing === true) {
+      window.__fireLock = true;
+    }
+    window.__firing = false;
     window.__aiming = true;
   }
 });

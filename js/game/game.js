@@ -55,7 +55,7 @@ function shotIntervalMs(fireRate) {
 let mouseX = 0;
 let mouseY = 0;
 let hasMouse = false;
-let isMouseDown = false;
+// let isMouseDown = false;  // Removed as per instruction
 
 // ===== Shooting visual state =====
 export let lastShotVisualAt = 0; // ms
@@ -92,14 +92,13 @@ export function startGame() {
 
   window.addEventListener("mousedown", (e) => {
     if (e.button === 0) {
-      isMouseDown = true;
+      // 交由 input.js 的 fireLock/aiming 規則控制 __firing
       window.__firing = true;
     }
   });
 
   window.addEventListener("mouseup", (e) => {
     if (e.button === 0) {
-      isMouseDown = false;
       window.__firing = false;
     }
   });
@@ -126,8 +125,10 @@ function equipRifle(player, rifleId) {
 }
 
 function tryFire(player, now) {
-  if (isUIFocus()) return;
-  const firing = (window.__firing === true) || isMouseDown;
+  // 開鏡時不允許射擊
+  if (window.__aiming === true) return;
+
+  const firing = (window.__firing === true);
   if (!firing || !hasMouse) return;
 
   // 只有當目前選到的快捷欄槽位是槍（rifle）時才允許射擊
