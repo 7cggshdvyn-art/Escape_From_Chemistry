@@ -25,10 +25,11 @@ let recoilVisX = 0; // px
 let recoilVisY = 0; // px
 
 // 後座力弧度 -> 像素 的縮放（想更明顯就調大）
-const RECOIL_VIS_PX_PER_RAD = 500;
+// 調小 = 準心被後座力推走的距離更短
+const RECOIL_VIS_PX_PER_RAD = 260;
 
 // 視覺回正速度（越大回得越快）
-const RECOIL_VIS_RETURN = 18;
+const RECOIL_VIS_RETURN = 22;
 
 // 鼠标坐标
 let mouseX = 0;
