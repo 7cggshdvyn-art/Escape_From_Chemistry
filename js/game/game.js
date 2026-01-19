@@ -458,22 +458,26 @@ function tryFire(player, now) {
   const baseDy = mouseY - player.y;
   const baseAngle = Math.atan2(baseDy, baseDx);
 
-  const sHip = (typeof s.hipSpread === "number") ? s.hipSpread : 0;
-  const sAim = (typeof s.aimSpread === "number") ? s.aimSpread : 0;
+  const sHip = (typeof s.hipSpread === "number") ? s.hipSpread : 0; // degrees
+  const sAim = (typeof s.aimSpread === "number") ? s.aimSpread : 0; // degrees
 
   // 開鏡進度（0~1）用來讓散布從 hip → aim 平滑過渡
   const ap2 = window.__aimProgress ?? 0;
   const t = Math.max(0, Math.min(1, ap2));
-  const spreadRadius = lerp(sHip, sAim, t);
 
-  // 對滑鼠目標點做隨機偏移（像素）
-  const off = randomPointInCircle(spreadRadius);
-  const targetX = mouseX + off.x;
-  const targetY = mouseY + off.y;
+  // Spread 改為「角度制」（degree → radian）
+  const spreadDeg = lerp(sHip, sAim, t);
+  const spreadRad = spreadDeg * Math.PI / 180;
 
-  const shotDx = targetX - player.x;
-  const shotDy = targetY - player.y;
-  const shotAngle = Math.atan2(shotDy, shotDx);
+  // 在 [-spread/2, +spread/2] 之間取隨機角度
+  const delta = (Math.random() - 0.5) * spreadRad;
+
+  // 注意：baseAngle 仍然用你原本的（目前是滑鼠）
+  const shotAngle = baseAngle + delta;
+
+  // 保留這兩行，給後面算距離 / target 用
+  const shotDx = Math.cos(shotAngle);
+  const shotDy = Math.sin(shotAngle);
 
   // 角色面向仍然跟著滑鼠（手感比較直覺）
   player.angle = baseAngle;
