@@ -416,8 +416,12 @@ function updatePlayerFacingToMouse(player) {
   if (!hasMouse) return;
   if (isUIFocus()) return;
 
-  const dx = mouseX - player.x;
-  const dy = mouseY - player.y;
+  // Step 2：用準星中心當作瞄準點（沒有就退回滑鼠）
+  const aimX = (typeof window.__aimX === "number") ? window.__aimX : mouseX;
+  const aimY = (typeof window.__aimY === "number") ? window.__aimY : mouseY;
+
+  const dx = aimX - player.x;
+  const dy = aimY - player.y;
   player.angle = Math.atan2(dy, dx);
 }
 
@@ -454,8 +458,12 @@ function tryFire(player, now) {
 
   // ===== 真正的散布：射擊方向會依 hipSpread/aimSpread 隨機偏移 =====
   // 注意：這裡先用「像素半徑」理解 spread（之後你要改成角度制也很容易）
-  const baseDx = mouseX - player.x;
-  const baseDy = mouseY - player.y;
+  // Step 2：用準星中心當作瞄準點（沒有就退回滑鼠）
+  const aimX = (typeof window.__aimX === "number") ? window.__aimX : mouseX;
+  const aimY = (typeof window.__aimY === "number") ? window.__aimY : mouseY;
+
+  const baseDx = aimX - player.x;
+  const baseDy = aimY - player.y;
   const baseAngle = Math.atan2(baseDy, baseDx);
 
   const sHip = (typeof s.hipSpread === "number") ? s.hipSpread : 0; // degrees
@@ -472,14 +480,14 @@ function tryFire(player, now) {
   // 在 [-spread/2, +spread/2] 之間取隨機角度
   const delta = (Math.random() - 0.5) * spreadRad;
 
-  // 注意：baseAngle 仍然用你原本的（目前是滑鼠）
+  // 注意：baseAngle 仍然用你原本的（目前是滑鼠或準星中心）
   const shotAngle = baseAngle + delta;
 
   // 保留這兩行，給後面算距離 / target 用
   const shotDx = Math.cos(shotAngle);
   const shotDy = Math.sin(shotAngle);
 
-  // 角色面向仍然跟著滑鼠（手感比較直覺）
+  // 角色面向仍然跟著 baseAngle（手感比較直覺）
   player.angle = baseAngle;
 
   // ===== Recoil (Step A): 只影響「子彈方向」 =====
