@@ -553,8 +553,40 @@ function tryFire(player, now) {
 
   // 用較長距離產生一個「射線終點」供 debug / 紅線等可視化使用
   const dist = 1200;
-  const finalTargetX = player.x + Math.cos(shotAngleFinal) * dist;
-  const finalTargetY = player.y + Math.sin(shotAngleFinal) * dist;
+  const dirX = Math.cos(shotAngleFinal);
+  const dirY = Math.sin(shotAngleFinal);
+
+  let finalTargetX = player.x + dirX * dist;
+  let finalTargetY = player.y + dirY * dist;
+
+  // ===== 命中判定（測試敵人：頭/身圓形）+ 扣血 =====
+  const enemiesArr = Array.isArray(window.__enemies) ? window.__enemies : [];
+  let bestHit = null;
+
+  for (const e of enemiesArr) {
+    if (!e || e.alive === false) continue;
+    const hit = rayHitEnemy(player.x, player.y, dirX, dirY, e);
+    if (!hit) continue;
+    if (!bestHit || hit.t < bestHit.t) {
+      bestHit = hit;
+    }
+  }
+
+  if (bestHit && bestHit.enemy) {
+    // 只有爆頭才套用 critMultiplier（enemy.takeHit 內已處理）
+    const baseDamage = w.def.stats.damage;
+    const critMul = w.def.stats.critMultiplier ?? 1;
+    bestHit.enemy.takeHit(baseDamage, { part: bestHit.part }, critMul);
+
+    // 讓紅線/可視化停在命中點
+    finalTargetX = bestHit.x;
+    finalTargetY = bestHit.y;
+
+    // debug：記錄命中部位
+    window.__lastHitPart = bestHit.part;
+  } else {
+    window.__lastHitPart = null;
+  }
 
   // 先把射擊用的角度/目標點暴露出去（之後你想讓紅線顯示實際彈道就能直接用）
   window.__lastShotAngle = shotAngleFinal;
