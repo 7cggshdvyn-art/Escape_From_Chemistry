@@ -49,7 +49,16 @@ export function toggleUIFocus() {
 let cursorVisible = false; // 初始隐藏鼠标
 
 function updateCursor() {
-  document.body.style.cursor = cursorVisible ? "default" : "none";
+  const cur = cursorVisible ? "default" : "none";
+
+  // body 游標只是預設值；實際在 canvas 上會被 canvas 的 cursor 覆蓋
+  document.body.style.cursor = cur;
+
+  // 同步 canvas，避免「畫面上還看到滑鼠」
+  const canvas = document.getElementById("game-canvas");
+  if (canvas) {
+    canvas.style.cursor = cur;
+  }
 }
 
 // 初始化时隐藏鼠标
