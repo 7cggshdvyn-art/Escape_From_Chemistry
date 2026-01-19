@@ -490,15 +490,15 @@ function tryFire(player, now) {
   // 角色面向仍然跟著 baseAngle（手感比較直覺）
   player.angle = baseAngle;
 
-  // ===== Recoil (Step A): 只影響「子彈方向」 =====
+  // ===== Recoil (Step 3): 只推準星（視覺/瞄準點），不再改子彈方向 =====
   const apRecoil = window.__aimProgress ?? 0;
   const kick = applyRecoilKick(w, s, apRecoil);
 
-  // 注意：畫面座標 y 向下為正；「往上踢」應該讓角度往上偏，所以是減去 recoilPitch
-  const shotAngleFinal = shotAngle + w.recoilYaw - w.recoilPitch;
+  // 子彈方向 = baseAngle + spread（所見即所得：準星中心決定 baseAngle）
+  const shotAngleFinal = shotAngle;
 
-  // 讓 target 也跟著角度修正（保留原本距離，方向改成含後座力的方向）
-  const dist = Math.max(1, Math.hypot(shotDx, shotDy));
+  // 用較長距離產生一個「射線終點」供 debug / 紅線等可視化使用
+  const dist = 1200;
   const finalTargetX = player.x + Math.cos(shotAngleFinal) * dist;
   const finalTargetY = player.y + Math.sin(shotAngleFinal) * dist;
 
