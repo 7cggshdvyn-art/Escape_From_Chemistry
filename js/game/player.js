@@ -22,7 +22,8 @@ export const player = {
 
     // ===== 翻滚中 =====
     if (this.isRolling) {
-      const speed = this.rollDistance / this.rollDuration; // m/s
+      // 翻滚距离以「米」定义，这里转换成像素（与移动速度一致，1m = 50px）
+      const speed = (this.rollDistance * 50) / this.rollDuration; // px/s
       this.x += this.rollDirX * speed * dt;
       this.y += this.rollDirY * speed * dt;
 
