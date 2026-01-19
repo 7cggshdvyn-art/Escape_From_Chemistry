@@ -1,5 +1,3 @@
-
-// ===== Icon paths (你之後自己改路徑即可) =====
 export const WATER_ICON_SRC = "images/ui/hud/icon_water.png";
 export const STAM_ICON_SRC = "images/ui/hud/icon_stamina.png";
 
