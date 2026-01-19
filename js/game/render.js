@@ -10,6 +10,10 @@ const hotbarIconCache = new Map();
 // ===== Crosshair spread animation (gap lerp) =====
 let crossGapPx = null; // 當前四段距離（px），用來做平滑動畫
 
+// ===== Independent crosshair (state) =====
+let crossX = null;
+let crossY = null;
+
 // ===== ADS (aim) timing =====
 let aimProgress = 0; // 0~1
 let lastRenderAt = 0;
@@ -74,6 +78,9 @@ export function initRender() {
   // 显示画布（如果你一开始隐藏它）
   canvas.style.display = "block";
 
+  // 隱藏系統滑鼠游標：我們自己用準心畫出來
+  canvas.style.cursor = "none";
+
   // 记录鼠标位置（相对 canvas）——用 window 监听，避免被菜单层挡住拿不到 mousemove
   window.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
@@ -98,6 +105,10 @@ function resizeCanvas() {
     mouseX = canvas.width / 2;
     mouseY = canvas.height / 2;
   }
+  if (crossX == null || crossY == null) {
+    crossX = mouseX;
+    crossY = mouseY;
+  }
   window.__mouseX = mouseX;
   window.__mouseY = mouseY;
   window.__hasMouse = hasMouse;
@@ -111,6 +122,9 @@ export function renderFrame(player, fireVisual = {}) {
 
   // ↓↓↓ 你原本 renderFrame 裡面的所有畫圖程式碼都要留在這裡（不要跑到函數外）
   if (!ctx) return;
+
+  // UI 介面打開時要看到系統游標；遊戲中則隱藏
+  canvas.style.cursor = isUIFocus() ? "default" : "none";
 
   // 清画面
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -194,9 +208,9 @@ export function renderFrame(player, fireVisual = {}) {
     const ay = Math.sin(ang);
     const px = -ay;
     const py = ax;
-
+    // 視覺比例：水平後座力約為垂直的 50%
     const pitchPx = -recoilPitch * RECOIL_VIS_PX_PER_RAD;
-    const yawPx = recoilYaw * RECOIL_VIS_PX_PER_RAD;
+    const yawPx = recoilYaw * RECOIL_VIS_PX_PER_RAD * 0.5;
 
     const targetRecoilX = ax * pitchPx + px * yawPx;
     const targetRecoilY = ay * pitchPx + py * yawPx;
@@ -211,11 +225,24 @@ export function renderFrame(player, fireVisual = {}) {
       recoilVisY = targetRecoilY;
     }
 
-    // 你真正看到的準心中心點（滑鼠 + 後座力偏移）
-    const cx = mouseX + recoilVisX;
-    const cy = mouseY + recoilVisY;
+    // ===== 獨立準星（state） =====
+    // 第一次進來先把準星放在滑鼠位置
+    if (crossX == null || crossY == null) {
+      crossX = mouseX;
+      crossY = mouseY;
+    }
 
+    // 滑鼠只是在「拉回」準星，不是直接等於準星
+    // 係數越小越難壓（準星更有慣性）
     const aimingRaw = window.__aiming === true;
+    const follow = aimingRaw ? 0.14 : 0.22;
+    crossX += (mouseX - crossX) * follow;
+    crossY += (mouseY - crossY) * follow;
+
+    // 你真正看到的準心中心點（獨立準星 + 後座力偏移）
+    const cx = crossX + recoilVisX;
+    const cy = crossY + recoilVisY;
+
     const weaponStats = player?.weapon?.def?.stats;
 
     const hipSpread = (weaponStats && typeof weaponStats.hipSpread === "number") ? weaponStats.hipSpread : 30;
