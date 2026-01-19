@@ -209,7 +209,8 @@ export function renderFrame(player, fireVisual = {}) {
     const px = -ay;
     const py = ax;
     // 視覺比例：水平後座力約為垂直的 50%
-    const pitchPx = -recoilPitch * RECOIL_VIS_PX_PER_RAD;
+    // 垂直後座力方向修正：把 pitch 反向（180 度）
+    const pitchPx = recoilPitch * RECOIL_VIS_PX_PER_RAD;
     const yawPx = recoilYaw * RECOIL_VIS_PX_PER_RAD * 0.5;
 
     const targetRecoilX = ax * pitchPx + px * yawPx;
