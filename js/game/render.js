@@ -177,12 +177,16 @@ export function renderFrame(player, fireVisual = {}) {
   // ===== 射击可视化：只在「射击瞬间」闪现 =====
   const now = performance.now();
   if (!isUIFocus() && hasMouse && (now - lastShotVisualAt < SHOT_FLASH_DURATION)) {
+    // 子彈/激光可視化：指向「準心中心」，不是原始鼠標位置
+    const aimX = (crossX == null ? mouseX : crossX) + recoilVisX;
+    const aimY = (crossY == null ? mouseY : crossY) + recoilVisY;
+
     ctx.save();
     ctx.strokeStyle = "rgba(255, 0, 0, 0.45)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(mouseX, mouseY);
+    ctx.lineTo(aimX, aimY);
     ctx.stroke();
     ctx.restore();
   }
