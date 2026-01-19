@@ -6,12 +6,6 @@ let arrowReady = false;
 // ===== Hotbar icon cache =====
 const hotbarIconCache = new Map();
 
-let crossUpImg, crossDownImg, crossLeftImg, crossRightImg, crossDotImg;
-let crossUpReady = false;
-let crossDownReady = false;
-let crossLeftReady = false;
-let crossRightReady = false;
-let crossDotReady = false;
 
 // ===== Crosshair spread animation (gap lerp) =====
 let crossGapPx = null; // 當前四段距離（px），用來做平滑動畫
@@ -44,12 +38,6 @@ window.__hasMouse = hasMouse;
 // 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
 
-// 你自己把路徑改成 5 張圖
-const CROSS_UP_SRC = "images/ui/on-go/crosshair_up.png";
-const CROSS_DOWN_SRC = "images/ui/on-go/crosshair_down.png";
-const CROSS_LEFT_SRC = "images/ui/on-go/crosshair_left.png";
-const CROSS_RIGHT_SRC = "images/ui/on-go/crosshair_right.png";
-const CROSS_DOT_SRC = "images/ui/on-go/crosshair_dot.png";
 
 export function initRender() {
   // 找 canvas
@@ -82,41 +70,6 @@ export function initRender() {
     console.error("箭头图片加载失败，检查路径：", ARROW_SRC);
   };
 
-  // 载入准星图片（5 部件）
-  crossUpImg = new Image();
-  crossUpImg.src = CROSS_UP_SRC;
-  crossUpImg.onload = () => {
-    crossUpReady = true;
-    console.log("crosshair up loaded:", CROSS_UP_SRC);
-  };
-
-  crossDownImg = new Image();
-  crossDownImg.src = CROSS_DOWN_SRC;
-  crossDownImg.onload = () => {
-    crossDownReady = true;
-    console.log("crosshair down loaded:", CROSS_DOWN_SRC);
-  };
-
-  crossLeftImg = new Image();
-  crossLeftImg.src = CROSS_LEFT_SRC;
-  crossLeftImg.onload = () => {
-    crossLeftReady = true;
-    console.log("crosshair left loaded:", CROSS_LEFT_SRC);
-  };
-
-  crossRightImg = new Image();
-  crossRightImg.src = CROSS_RIGHT_SRC;
-  crossRightImg.onload = () => {
-    crossRightReady = true;
-    console.log("crosshair right loaded:", CROSS_RIGHT_SRC);
-  };
-
-  crossDotImg = new Image();
-  crossDotImg.src = CROSS_DOT_SRC;
-  crossDotImg.onload = () => {
-    crossDotReady = true;
-    console.log("crosshair dot loaded:", CROSS_DOT_SRC);
-  };
 
   // 显示画布（如果你一开始隐藏它）
   canvas.style.display = "block";
@@ -318,61 +271,42 @@ export function renderFrame(player, fireVisual = {}) {
 
 
     // 你的素材是 1024x1024，大幅縮小會讓細線被抗鋸齒吃掉，所以先用大一點的顯示尺寸
-  const crossScale = 0.9; // 👈 全局縮放倍率（0.4 ~ 0.8 都合理）
+    const crossScale = 0.9; // 全局縮放倍率
 
-    const segW = 36 * crossScale;
-    const segH = 36 * crossScale;
+    // ===== 用 Canvas 畫準心（不依賴圖片） =====
+    // 線段長度/粗細跟 crossScale 同步
+    const segLen = 14 * crossScale;
+    const innerPad = 4 * crossScale; // 線段離中心的最小間距（再加上 gap）
+    const lw = Math.max(1.5, 2.2 * crossScale);
 
-    const dotW = 8 * crossScale;
-    const dotH = 8 * crossScale;
-
-    const allSegReady = crossUpReady && crossDownReady && crossLeftReady && crossRightReady;
-
-    // 畫準心圖片時關掉抗鋸齒，避免細線縮放後看不見
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = lw;
+    ctx.lineCap = "round";
 
-    if (allSegReady) {
-      // 上
-      ctx.drawImage(crossUpImg, cx - segW / 2, cy - gap - segH, segW, segH);
-      // 下
-      ctx.drawImage(crossDownImg, cx - segW / 2, cy + gap, segW, segH);
-      // 左
-      ctx.drawImage(crossLeftImg, cx - gap - segW, cy - segH / 2, segW, segH);
-      // 右
-      ctx.drawImage(crossRightImg, cx + gap, cy - segH / 2, segW, segH);
-    } else {
-      // 占位：四段式
-      ctx.save();
-      ctx.strokeStyle = "#000000";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      // 上
-      ctx.moveTo(cx, cy - gap - 14);
-      ctx.lineTo(cx, cy - gap - 4);
-      // 下
-      ctx.moveTo(cx, cy + gap + 4);
-      ctx.lineTo(cx, cy + gap + 14);
-      // 左
-      ctx.moveTo(cx - gap - 14, cy);
-      ctx.lineTo(cx - gap - 4, cy);
-      // 右
-      ctx.moveTo(cx + gap + 4, cy);
-      ctx.lineTo(cx + gap + 14, cy);
-      ctx.stroke();
-      ctx.restore();
-    }
+    ctx.beginPath();
+    // 上
+    ctx.moveTo(cx, cy - gap - innerPad - segLen);
+    ctx.lineTo(cx, cy - gap - innerPad);
+    // 下
+    ctx.moveTo(cx, cy + gap + innerPad);
+    ctx.lineTo(cx, cy + gap + innerPad + segLen);
+    // 左
+    ctx.moveTo(cx - gap - innerPad - segLen, cy);
+    ctx.lineTo(cx - gap - innerPad, cy);
+    // 右
+    ctx.moveTo(cx + gap + innerPad, cy);
+    ctx.lineTo(cx + gap + innerPad + segLen, cy);
 
+    ctx.stroke();
     ctx.restore();
 
-    // 中点：只有瞄准才画（直接用 Canvas 画黑点，不依赖图片）
+    // 右鍵瞄準完成後才顯示中心點（腰射不畫）
     if (aiming) {
       ctx.save();
       ctx.fillStyle = "#000000";
       ctx.beginPath();
-      // 半径跟 crossScale 同步（让不同缩放下视觉一致）
-      const r = 2.4 * crossScale;
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 2.2 * crossScale, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
