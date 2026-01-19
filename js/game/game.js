@@ -198,6 +198,44 @@ function randomPointInCircle(r) {
   const rr = Math.sqrt(u) * r;
   return { x: Math.cos(a) * rr, y: Math.sin(a) * rr };
 }
+// ===== Hit test helpers (ray vs circle) =====
+// 射線：P + tD, t >= 0
+// 回傳 null 或 { t, x, y }
+function rayCircle(px, py, dx, dy, cx, cy, r) {
+  const ox = px - cx;
+  const oy = py - cy;
+
+  // D 需要是單位向量（我們用 cos/sin 本來就是）
+  const b = ox * dx + oy * dy;
+  const c = ox * ox + oy * oy - r * r;
+  const disc = b * b - c;
+  if (disc < 0) return null;
+
+  const t = -b - Math.sqrt(disc);
+  if (t < 0) return null;
+
+  return { t, x: px + dx * t, y: py + dy * t };
+}
+
+// 依你 render.js 的占位畫法：身體半徑 18、頭半徑 8，頭在 y-14
+function rayHitEnemy(px, py, dx, dy, enemy) {
+  const ex = (typeof enemy.x === "number") ? enemy.x : 0;
+  const ey = (typeof enemy.y === "number") ? enemy.y : 0;
+
+  // 頭（優先判斷）
+  const head = rayCircle(px, py, dx, dy, ex, ey - 14, 8);
+  // 身體
+  const body = rayCircle(px, py, dx, dy, ex, ey, 18);
+
+  if (head && body) {
+    return (head.t <= body.t)
+      ? { ...head, enemy, part: "head" }
+      : { ...body, enemy, part: "body" };
+  }
+  if (head) return { ...head, enemy, part: "head" };
+  if (body) return { ...body, enemy, part: "body" };
+  return null;
+}
 
 // ===== Recoil helpers =====
 // 你 data_rifle.js 的 recoil 數值偏大，先用比例換算成弧度（之後你想改成角度制也容易）
