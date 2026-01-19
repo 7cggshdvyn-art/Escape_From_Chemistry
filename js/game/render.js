@@ -370,7 +370,7 @@ export function renderFrame(player, fireVisual = {}) {
   const slot1CenterY = y + size / 2;
 
   // 兩個圓放在 slot1 左邊
-  const anchorX = slot1X - 56;
+  const anchorX = slot1X - 100; // 往左搬（數字越大越靠左）
 
   drawVitals(ctx, anchorX, slot1CenterY, {
     hydration: (typeof window.__hydration === "number") ? window.__hydration : 100,
