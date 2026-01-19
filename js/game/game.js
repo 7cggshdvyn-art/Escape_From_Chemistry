@@ -187,6 +187,11 @@ function createWeaponInstance(def) {
     recoilRecoverHoldPitch: 0,
     recoilRecoverHoldYaw: 0,
     recoilRecoverHolding: false,
+
+    // ===== Dynamic spread (Patch 1): bloom state =====
+    spreadBloomDeg: 0, // 連射累積散布（角度，度）
+    spreadBloomLastKickAt: 0, // 最近一次累積時間（ms）
+    spreadBloomRecoverDelayMs: 80, // 停火後延遲多久才開始收斂（ms）
   };
 }
 
@@ -335,6 +340,20 @@ if (now > 0 && (now - lastMouseMoveAt) < MANUAL_AIM_HOLD_MS) {
 
   w.recoilPitch = approach(w.recoilPitch, targetPitch, dp);
   w.recoilYaw = approach(w.recoilYaw, targetYaw, dy);
+}
+
+function recoverSpreadBloom(w, dt, now) {
+  if (!w) return;
+
+  const delay = (typeof w.spreadBloomRecoverDelayMs === "number") ? w.spreadBloomRecoverDelayMs : 0;
+  const last = (typeof w.spreadBloomLastKickAt === "number") ? w.spreadBloomLastKickAt : 0;
+  if (delay > 0 && now > 0 && (now - last) < delay) return;
+
+  // 每秒收斂多少度（先用保守值；Patch 2 會加上累積）
+  const recoverDegPerSec = 3.0;
+  const maxDelta = recoverDegPerSec * dt;
+
+  w.spreadBloomDeg = approach(w.spreadBloomDeg, 0, maxDelta);
 }
 
 
@@ -508,6 +527,13 @@ function tryFire(player, now) {
   w.ammoInMag--;
   w.lastShotAt = now;
 
+  // ===== Dynamic spread (Patch 2): bloom kick =====
+  // 每發累積一些散布，並限制上限（步槍先用通用保守值）
+  const bloomAddPerShotDeg = 0.25;
+  const bloomMaxDeg = 2.5;
+  w.spreadBloomDeg = Math.min(bloomMaxDeg, (w.spreadBloomDeg || 0) + bloomAddPerShotDeg);
+  w.spreadBloomLastKickAt = now;
+
   // 触发射击视觉（给 render 用）
   lastShotVisualAt = now;
 
@@ -529,7 +555,24 @@ function tryFire(player, now) {
   const t = Math.max(0, Math.min(1, ap2));
 
   // Spread 改為「角度制」（degree → radian）
-  const spreadDeg = lerp(sHip, sAim, t);
+  // Patch 2：加上連射累積散布（bloom）
+  // Patch 3：移動/跑步/翻滾會額外增加散布
+  const spreadDegBase = lerp(sHip, sAim, t);
+
+  // ===== Movement penalty (degrees) =====
+  const moving = (keys.up || keys.down || keys.left || keys.right) === true;
+  const runningNow = (keys.shift === true) && moving;
+
+  let movePenaltyDeg = 0;
+  if (player.isRolling === true) {
+    movePenaltyDeg = 2.0;
+  } else if (runningNow) {
+    movePenaltyDeg = 1.2;
+  } else if (moving) {
+    movePenaltyDeg = 0.6;
+  }
+
+  const spreadDeg = spreadDegBase + (w.spreadBloomDeg || 0) + movePenaltyDeg;
   const spreadRad = spreadDeg * Math.PI / 180;
 
   // 在 [-spread/2, +spread/2] 之間取隨機角度
@@ -735,9 +778,10 @@ player.update(dt);
 // A：不管有沒有開火，槍口/箭頭都要跟著滑鼠
 updatePlayerFacingToMouse(player);
 
-// ===== Recoil recovery (Step A) =====
+// ===== Recoil + Spread recovery =====
 if (player.weapon) {
   recoverRecoil(player.weapon, dt, window.__aimProgress ?? 0, now);
+  recoverSpreadBloom(player.weapon, dt, now);
 }
 
   updateReload(player, now);
