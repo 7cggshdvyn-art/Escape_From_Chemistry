@@ -174,6 +174,11 @@ export function renderFrame(player, fireVisual = {}) {
     ctx.restore();
   }
 
+  // ===== 敵人（測試） =====
+  // 由 game.js 提供：window.__enemies = [Enemy, ...]
+  const enemies = Array.isArray(window.__enemies) ? window.__enemies : [];
+  drawEnemies(enemies);
+
   // ===== 射击可视化：只在「射击瞬间」闪现 =====
   const now = performance.now();
   if (!isUIFocus() && hasMouse && (now - lastShotVisualAt < SHOT_FLASH_DURATION)) {
@@ -350,6 +355,55 @@ export function renderFrame(player, fireVisual = {}) {
   drawActionBar();
 }
 
+
+function drawEnemies(enemies) {
+  if (!ctx) return;
+
+  for (const e of enemies) {
+    if (!e || e.alive === false) continue;
+
+    const ex = typeof e.x === "number" ? e.x : 0;
+    const ey = typeof e.y === "number" ? e.y : 0;
+
+    // ===== 身體（先用圓形占位） =====
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+    ctx.beginPath();
+    ctx.arc(ex, ey, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== 頭（小圓，之後命中判定可用） =====
+    ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+    ctx.beginPath();
+    ctx.arc(ex, ey - 14, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== 血條：在敵人上方 =====
+    const maxHp = (typeof e.maxHp === "number" && e.maxHp > 0) ? e.maxHp : 100;
+    const hp = (typeof e.hp === "number") ? e.hp : maxHp;
+    const ratio = Math.max(0, Math.min(1, hp / maxHp));
+
+    const barW = 44;
+    const barH = 6;
+    const barX = ex - barW / 2;
+    const barY = ey - 18 - 18; // 身體半徑 18，再往上 18px
+
+    // 底
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.fillRect(barX, barY, barW, barH);
+
+    // 血
+    ctx.fillStyle = "rgba(0, 170, 0, 0.85)";
+    ctx.fillRect(barX, barY, barW * ratio, barH);
+
+    // 外框
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX + 0.5, barY + 0.5, barW - 1, barH - 1);
+
+    ctx.restore();
+  }
+}
 
 function drawHotbar(player) {
   if (!ctx || !canvas) return;

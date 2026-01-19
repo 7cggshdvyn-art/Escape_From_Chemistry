@@ -1,5 +1,6 @@
 import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
+import Enemy from "./enemy.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
 
 import { isUIFocus, setUIFocus, keys } from "./input.js";
@@ -11,6 +12,19 @@ const getReloadRequested = () => window.__reloadRequested === true;
 
 let running = false;
 let lastFrameAt = 0;
+// ===== Enemies (test) =====
+const enemies = [];
+window.__enemies = enemies; // render.js 會讀這個
+
+function spawnTestEnemyOnRight() {
+  enemies.length = 0;
+
+  // 放在玩家右側一段距離（視覺上就是右邊）
+  const ex = (typeof player.x === "number" ? player.x : 0) + 420;
+  const ey = (typeof player.y === "number" ? player.y : 0);
+
+  enemies.push(new Enemy({ id: "e1", x: ex, y: ey, maxHp: 100 }));
+}
 
 // ===== 通用動作（進度條）控制器 =====
 // render.js 會讀 window.__actionBar 來畫 UI
@@ -356,6 +370,8 @@ export function startGame() {
 
   // 根據目前選取的 hotbar slot 裝備武器（先支援 rifle）
   syncEquippedWeaponFromHotbar(player);
+  // 生成一隻測試敵人（在玩家右側）
+  spawnTestEnemyOnRight();
 
   requestAnimationFrame(loop);
 }
