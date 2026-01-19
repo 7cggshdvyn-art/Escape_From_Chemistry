@@ -650,3 +650,15 @@ if (player.weapon) {
 
   requestAnimationFrame(loop);
 }
+// ===== TEMP mouse state (bridge) =====
+// NOTE: render.js owns the real mouse state; these are only to prevent ReferenceError
+let mouseX = 0;
+let mouseY = 0;
+let hasMouse = false;
+
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastMouseMoveAt = 0;
+
+const MANUAL_AIM_MOVE_THRESHOLD_PX = 1;
+const MANUAL_AIM_HOLD_MS = 120;

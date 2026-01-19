@@ -287,7 +287,7 @@ const rifle = [
 
       debuff: {
         type: "poison",
-        rate: 0.25
+        poisonRate: 0.25
       }
     }
   },
@@ -415,7 +415,7 @@ const rifle = [
       
       debuff: {
         type: "frozen",
-        rate: 0.5
+        frozenRate: 0.5
       }
     }
   },
@@ -666,9 +666,9 @@ const rifle = [
 
       debuff: {
         type: "burn",
-        rate: 0.35,
-        type: "DeArmor",
-        rate: 100
+        burnRate: 0.35,
+        type: "deArmor",
+        deArmorRate: 100
       }
     }
   },
@@ -714,7 +714,7 @@ const rifle = [
 
       debuff: {
         type: "burn",
-        rate: 0.25
+        burnRate: 0.25
       }
     }
   },
