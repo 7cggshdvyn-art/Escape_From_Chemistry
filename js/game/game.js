@@ -201,7 +201,7 @@ function randomPointInCircle(r) {
 // ===== Hit test helpers (ray vs circle) =====
 // 射線：P + tD, t >= 0
 // 回傳 null 或 { t, x, y }
-function rayCircle(px, py, dx, dy, cx, cy, r) {
+function rayCircle(px, py, dx, dy, cx, cy, r, maxT = Infinity) {
   const ox = px - cx;
   const oy = py - cy;
 
@@ -213,19 +213,20 @@ function rayCircle(px, py, dx, dy, cx, cy, r) {
 
   const t = -b - Math.sqrt(disc);
   if (t < 0) return null;
+  if (t > maxT) return null;
 
   return { t, x: px + dx * t, y: py + dy * t };
 }
 
 // 依你 render.js 的占位畫法：身體半徑 18、頭半徑 8，頭在 y-14
-function rayHitEnemy(px, py, dx, dy, enemy) {
+function rayHitEnemy(px, py, dx, dy, enemy, maxT = Infinity) {
   const ex = (typeof enemy.x === "number") ? enemy.x : 0;
   const ey = (typeof enemy.y === "number") ? enemy.y : 0;
 
   // 頭（優先判斷）
-  const head = rayCircle(px, py, dx, dy, ex, ey - 14, 8);
+  const head = rayCircle(px, py, dx, dy, ex, ey - 14, 8, maxT);
   // 身體
-  const body = rayCircle(px, py, dx, dy, ex, ey, 18);
+  const body = rayCircle(px, py, dx, dy, ex, ey, 18, maxT);
 
   if (head && body) {
     return (head.t <= body.t)
@@ -563,9 +564,12 @@ function tryFire(player, now) {
   const enemiesArr = Array.isArray(window.__enemies) ? window.__enemies : [];
   let bestHit = null;
 
+  // 只算「玩家 → 準星中心」這段距離內的命中，避免準心偏離但方向大致對就仍然打到
+  const maxHitT = Math.max(1, Math.hypot(aimX - player.x, aimY - player.y));
+
   for (const e of enemiesArr) {
     if (!e || e.alive === false) continue;
-    const hit = rayHitEnemy(player.x, player.y, dirX, dirY, e);
+    const hit = rayHitEnemy(player.x, player.y, dirX, dirY, e, maxHitT);
     if (!hit) continue;
     if (!bestHit || hit.t < bestHit.t) {
       bestHit = hit;
