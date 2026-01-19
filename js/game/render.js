@@ -1,4 +1,5 @@
 import { isUIFocus } from "./input.js";
+import { initUI, drawVitals } from "./ui.js";
 let canvas, ctx;
 let arrowImg;
 let arrowReady = false;
@@ -53,6 +54,9 @@ export function initRender() {
   }
 
   ctx = canvas.getContext("2d");
+
+  // 初始化 UI（預載水分/體力圖示）
+  initUI();
 
   // 设定画布尺寸（先跟视窗一样大）
   resizeCanvas();
@@ -350,6 +354,33 @@ export function renderFrame(player, fireVisual = {}) {
 
   // ===== 底部快捷欄（1 2 V 3 4 5 6 7 8） =====
   drawHotbar(player);
+  // ===== 水分/體力圓環（在快捷欄 1 左邊） =====
+{
+  const size = 44;
+  const gap = 10;
+  const padBottom = 34;
+
+  // 9 格（1,2,V,3,4,5,6,7,8）
+  const totalW = 9 * size + 8 * gap;
+  const startX = (canvas.width - totalW) / 2 + 120;
+  const y = canvas.height - padBottom - size;
+
+  // slot 1 是第一格
+  const slot1X = startX;
+  const slot1CenterY = y + size / 2;
+
+  // 兩個圓放在 slot1 左邊
+  const anchorX = slot1X - 56;
+
+  drawVitals(ctx, anchorX, slot1CenterY, {
+    hydration: (typeof window.__hydration === "number") ? window.__hydration : 100,
+    hydrationMax: (typeof window.__hydrationMax === "number") ? window.__hydrationMax : 100,
+    stamina: (typeof window.__stamina === "number") ? window.__stamina : 100,
+    staminaMax: (typeof window.__staminaMax === "number") ? window.__staminaMax : 100,
+    radius: 18,
+    gap: 14,
+  });
+}
 
   // ===== 通用動作進度條（換彈/互動等共用） =====
   drawActionBar();
