@@ -36,6 +36,11 @@ let mouseX = 0;
 let mouseY = 0;
 let hasMouse = true;
 
+// 對外暴露（game.js 仍有使用到）
+window.__mouseX = mouseX;
+window.__mouseY = mouseY;
+window.__hasMouse = hasMouse;
+
 // 箭头路径
 const ARROW_SRC = "images/character/arrow.png";
 
@@ -122,6 +127,11 @@ export function initRender() {
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
     hasMouse = true;
+
+    // 同步給其他模組使用
+    window.__mouseX = mouseX;
+    window.__mouseY = mouseY;
+    window.__hasMouse = hasMouse;
   });
 }
 
@@ -135,6 +145,9 @@ function resizeCanvas() {
     mouseX = canvas.width / 2;
     mouseY = canvas.height / 2;
   }
+  window.__mouseX = mouseX;
+  window.__mouseY = mouseY;
+  window.__hasMouse = hasMouse;
 }
 
 export function renderFrame(player, fireVisual = {}) {
