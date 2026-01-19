@@ -26,7 +26,7 @@ let recoilVisY = 0; // px
 
 // 後座力弧度 -> 像素 的縮放（想更明顯就調大）
 // 調小 = 準心被後座力推走的距離更短
-const RECOIL_VIS_PX_PER_RAD = 260;
+const RECOIL_VIS_PX_PER_RAD = 50;
 
 // 視覺回正速度（越大回得越快）
 const RECOIL_VIS_RETURN = 22;
@@ -220,9 +220,20 @@ export function renderFrame(player, fireVisual = {}) {
     const recoilPitch = (wInst && typeof wInst.recoilPitch === "number") ? wInst.recoilPitch : 0;
     const recoilYaw = (wInst && typeof wInst.recoilYaw === "number") ? wInst.recoilYaw : 0;
 
-    // 目標偏移（px）：左右 = yaw；往上踢 = pitch（畫面 y 向下為正，所以是負號）
-    const targetRecoilX = recoilYaw * RECOIL_VIS_PX_PER_RAD;
-    const targetRecoilY = -recoilPitch * RECOIL_VIS_PX_PER_RAD;
+    // 目標偏移（px）：把後座力座標系跟著瞄準方向旋轉
+    // pitch：沿著瞄準方向（aim）
+    // yaw：垂直於瞄準方向（perp）=> 你要的「水平後座力」會隨滑鼠方向改變
+    const ang = (typeof player?.angle === "number") ? player.angle : angle;
+    const ax = Math.cos(ang);
+    const ay = Math.sin(ang);
+    const px = -ay;
+    const py = ax;
+
+    const pitchPx = -recoilPitch * RECOIL_VIS_PX_PER_RAD;
+    const yawPx = recoilYaw * RECOIL_VIS_PX_PER_RAD;
+
+    const targetRecoilX = ax * pitchPx + px * yawPx;
+    const targetRecoilY = ay * pitchPx + py * yawPx;
 
     // 平滑：避免每發跳動太生硬（dt 已在上面算好，單位秒）
     if (dt > 0) {

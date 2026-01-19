@@ -284,20 +284,6 @@ if (now > 0 && (now - lastMouseMoveAt) < MANUAL_AIM_HOLD_MS) {
   w.recoilYaw = approach(w.recoilYaw, targetYaw, dy);
 }
 
-let mouseX = 0;
-let mouseY = 0;
-let hasMouse = false;
-
-// ===== Manual aim priority (mouse moved => pause recoil auto-return) =====
-let lastMouseX = 0;
-let lastMouseY = 0;
-let lastMouseMoveAt = 0; // ms
-
-// 只要滑鼠位移超過這個門檻，就視為玩家正在手動控槍
-const MANUAL_AIM_MOVE_THRESHOLD_PX = 1; // px
-
-// 滑鼠停止後多久才允許 recoil 開始自動回正
-const MANUAL_AIM_HOLD_MS = 120; // ms
 
 // ===== Shooting visual state =====
 export let lastShotVisualAt = 0; // ms
