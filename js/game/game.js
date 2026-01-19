@@ -607,8 +607,12 @@ function tryFire(player, now) {
   const enemiesArr = Array.isArray(window.__enemies) ? window.__enemies : [];
   let bestHit = null;
 
-  // 只算「玩家 → 準星中心」這段距離內的命中，避免準心偏離但方向大致對就仍然打到
-  const maxHitT = Math.max(1, Math.hypot(aimX - player.x, aimY - player.y));
+  // 命中距離：用武器射程（range, m）轉像素；沒有就用 dist
+  const weaponRangePx = (typeof s.range === "number" && s.range > 0) ? (s.range * 50) : dist;
+  const maxHitT = Math.max(1, Math.min(dist, weaponRangePx));
+
+  // 軟性準星門檻：命中點需要在準星附近，避免「方向差不多」就中
+  const aimTolerancePx = 90;
 
   for (const e of enemiesArr) {
     if (!e || e.alive === false) continue;
@@ -620,17 +624,23 @@ function tryFire(player, now) {
   }
 
   if (bestHit && bestHit.enemy) {
-    // 只有爆頭才套用 critMultiplier（enemy.takeHit 內已處理）
-    const baseDamage = w.def.stats.damage;
-    const critMul = w.def.stats.critMultiplier ?? 1;
-    bestHit.enemy.takeHit(baseDamage, { part: bestHit.part }, critMul);
+    // 需要「準星夠接近命中點」才算命中（讓手感更合理、也比較好命中）
+    const dAim = Math.hypot(bestHit.x - aimX, bestHit.y - aimY);
+    if (dAim <= aimTolerancePx) {
+      // 只有爆頭才套用 critMultiplier（enemy.takeHit 內已處理）
+      const baseDamage = w.def.stats.damage;
+      const critMul = w.def.stats.critMultiplier ?? 1;
+      bestHit.enemy.takeHit(baseDamage, { part: bestHit.part }, critMul);
 
-    // 讓紅線/可視化停在命中點
-    finalTargetX = bestHit.x;
-    finalTargetY = bestHit.y;
+      // 讓紅線/可視化停在命中點
+      finalTargetX = bestHit.x;
+      finalTargetY = bestHit.y;
 
-    // debug：記錄命中部位
-    window.__lastHitPart = bestHit.part;
+      // debug：記錄命中部位
+      window.__lastHitPart = bestHit.part;
+    } else {
+      window.__lastHitPart = null;
+    }
   } else {
     window.__lastHitPart = null;
   }
