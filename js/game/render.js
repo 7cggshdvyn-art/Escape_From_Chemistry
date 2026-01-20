@@ -378,7 +378,7 @@ export function renderFrame(player, fireVisual = {}) {
     stamina: (typeof window.__stamina === "number") ? window.__stamina : 100,
     staminaMax: (typeof window.__staminaMax === "number") ? window.__staminaMax : 100,
     radius: 18,
-    gap: 14,
+    gap: 28,
   });
 }
 
