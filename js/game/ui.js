@@ -1,10 +1,13 @@
 export const WATER_ICON_SRC = "images/ui/hud/icon_water.png";
 export const STAM_ICON_SRC = "images/ui/hud/icon_stamina.png";
+export const HEART_ICON_SRC = "images/ui/hud/icon_heart.png";
 
 let waterImg = null;
 let stamImg = null;
 let waterReady = false;
 let stamReady = false;
+let heartImg = null;
+let heartReady = false;
 
 export function initUI() {
   // 預載兩張圖示（你也可以不放圖，照樣會畫圈）
@@ -15,6 +18,10 @@ export function initUI() {
   stamImg = new Image();
   stamImg.src = STAM_ICON_SRC;
   stamImg.onload = () => (stamReady = true);
+
+  heartImg = new Image();
+  heartImg.src = HEART_ICON_SRC;
+  heartImg.onload = () => (heartReady = true);
 }
 
 function clamp01(v) {
@@ -128,6 +135,92 @@ function drawIcon(ctx, x, y, size, img, ready) {
   ctx.restore();
 }
 
+function roundRectPath(ctx, x, y, w, h, r) {
+  const rr = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+function drawHealth(ctx, x, centerY, values = {}) {
+  // x 是整組最左邊；centerY 跟水分圓心對齊
+  const health = (typeof values.health === "number") ? values.health : 100;
+  const healthMax = (typeof values.healthMax === "number" && values.healthMax > 0) ? values.healthMax : 100;
+  const ratio = clamp01(health / healthMax);
+
+  const heartSize = (typeof values.heartSize === "number") ? values.heartSize : 22;
+  const barW = (typeof values.barW === "number") ? values.barW : 110; // 預留足夠空間
+  const barH = (typeof values.barH === "number") ? values.barH : 10;
+
+  const padX = 10;
+  const padY = 8;
+  const gap = 10;
+
+  const boxW = padX * 2 + heartSize + gap + barW;
+  const boxH = padY * 2 + Math.max(heartSize, barH);
+
+  const boxY = centerY - boxH / 2;
+
+  ctx.save();
+
+  // 很淡的黑色背景框住整組
+  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+  roundRectPath(ctx, x, boxY, boxW, boxH, 10);
+  ctx.fill();
+
+  // Heart icon
+  const heartX = x + padX;
+  const heartY = centerY - heartSize / 2;
+
+  if (heartImg && heartReady) {
+    ctx.globalAlpha = 0.95;
+    ctx.drawImage(heartImg, heartX, heartY, heartSize, heartSize);
+  } else {
+    // fallback：沒有圖就畫個小圓
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.arc(heartX + heartSize / 2, centerY, heartSize * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Health bar（跟 heart 連著）
+  const barX = heartX + heartSize + gap;
+  const barY = centerY - barH / 2;
+
+  // bar background
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  roundRectPath(ctx, barX, barY, barW, barH, barH / 2);
+  ctx.fill();
+
+  // bar fill：白為主、帶一點淡紅
+  const fillW = Math.max(0, barW * ratio);
+  if (fillW > 0) {
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grad.addColorStop(0.0, "rgba(255, 255, 255, 0.92)");
+    grad.addColorStop(0.85, "rgba(255, 255, 255, 0.88)");
+    grad.addColorStop(1.0, "rgba(255, 120, 120, 0.55)");
+    ctx.fillStyle = grad;
+    roundRectPath(ctx, barX, barY, fillW, barH, barH / 2);
+    ctx.fill();
+  }
+
+  // subtle outline
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.28)";
+  ctx.lineWidth = 1;
+  roundRectPath(ctx, x + 0.5, boxY + 0.5, boxW - 1, boxH - 1, 10);
+  ctx.stroke();
+
+  ctx.restore();
+
+  return { boxW, boxH };
+}
+
 /**
  * 畫兩個圓圈狀態：左水分、右體力
  * @param {CanvasRenderingContext2D} ctx
@@ -138,6 +231,8 @@ function drawIcon(ctx, x, y, size, img, ready) {
  * @param {number} values.hydrationMax - 最大水分
  * @param {number} values.stamina - 當前體力
  * @param {number} values.staminaMax - 最大體力
+ * @param {number} [values.health] - 當前生命值
+ * @param {number} [values.healthMax] - 最大生命值
  * @param {number} [values.radius] - 內圈半徑（可調）
  * @param {number} [values.gap] - 兩圓之間距（可調）
  */
@@ -161,6 +256,30 @@ export function drawVitals(ctx, anchorX, anchorY, values = {}) {
 
   // 外薄圈半徑（窄一點的外環）
   const rOuter = r + Math.max(4, r * 0.35);
+
+  // ===== Health（在水分左邊，預留足夠空間做 health bar） =====
+  {
+    const heartSize = 22;
+    const barW = 110;
+    const barH = 10;
+
+    // 與水分外環保持距離
+    const leftGap = 18;
+
+    // drawHealth 會用 padX(10) + gap(10)，所以這裡用同樣的寬度估算，避免貼到水分圈
+    const padX = 10;
+    const innerGap = 10;
+    const boxW = padX * 2 + heartSize + innerGap + barW;
+
+    const boxX = x1 - (rOuter + leftGap + boxW);
+    drawHealth(ctx, boxX, y, {
+      health: values.health,
+      healthMax: values.healthMax,
+      heartSize,
+      barW,
+      barH,
+    });
+  }
 
   // 水分（左）
   drawOuterThinRing(ctx, x1, y, rOuter, hydR, "water");

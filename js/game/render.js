@@ -373,6 +373,14 @@ export function renderFrame(player, fireVisual = {}) {
   const anchorX = slot1X - 100; // 往左搬（數字越大越靠左）
 
   drawVitals(ctx, anchorX, slot1CenterY, {
+    // Health（優先用 player 的實際值；沒有就回退到 window 變數）
+    health: (typeof player?.hp === "number")
+      ? player.hp
+      : ((typeof window.__health === "number") ? window.__health : 100),
+    healthMax: (typeof player?.maxHp === "number" && player.maxHp > 0)
+      ? player.maxHp
+      : ((typeof window.__healthMax === "number" && window.__healthMax > 0) ? window.__healthMax : 100),
+
     hydration: (typeof window.__hydration === "number") ? window.__hydration : 100,
     hydrationMax: (typeof window.__hydrationMax === "number") ? window.__hydrationMax : 100,
     stamina: (typeof window.__stamina === "number") ? window.__stamina : 100,
