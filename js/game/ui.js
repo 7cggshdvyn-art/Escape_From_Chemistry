@@ -148,8 +148,8 @@ function roundRectPath(ctx, x, y, w, h, r) {
 
 function drawHealth(ctx, x, centerY, values = {}) {
   // x 是整組最左邊；centerY 跟水分圓心對齊
-  const health = (typeof values.health === "number") ? values.health : 100;
-  const healthMax = (typeof values.healthMax === "number" && values.healthMax > 0) ? values.healthMax : 100;
+  const health = (typeof values.health === "number") ? values.health : 60;
+  const healthMax = (typeof values.healthMax === "number" && values.healthMax > 0) ? values.healthMax : 60;
   const ratio = clamp01(health / healthMax);
 
   const heartSize = (typeof values.heartSize === "number") ? values.heartSize : 22;
@@ -257,10 +257,31 @@ export function drawVitals(ctx, anchorX, anchorY, values = {}) {
   const r = typeof values.radius === "number" ? values.radius : 18;
   const gap = typeof values.gap === "number" ? values.gap : 24;
 
-  const hyd = (typeof values.hydration === "number") ? values.hydration : 100;
-  const hydMax = (typeof values.hydrationMax === "number" && values.hydrationMax > 0) ? values.hydrationMax : 100;
-  const sta = (typeof values.stamina === "number") ? values.stamina : 100;
-  const staMax = (typeof values.staminaMax === "number" && values.staminaMax > 0) ? values.staminaMax : 100;
+  // 支援兩種輸入：
+  // 1) 扁平欄位：values.health/healthMax, values.stamina/staminaMax, values.hydration/hydrationMax
+  // 2) 角色資料結構：values.stats.hp.current/max, values.stats.stamina.current/max, values.stats.water.current/max
+  const st = values.stats || null;
+
+  const health = (typeof values.health === "number")
+    ? values.health
+    : (typeof st?.hp?.current === "number" ? st.hp.current : 60);
+  const healthMax = (typeof values.healthMax === "number" && values.healthMax > 0)
+    ? values.healthMax
+    : (typeof st?.hp?.max === "number" && st.hp.max > 0 ? st.hp.max : 60);
+
+  const hyd = (typeof values.hydration === "number")
+    ? values.hydration
+    : (typeof st?.water?.current === "number" ? st.water.current : 105);
+  const hydMax = (typeof values.hydrationMax === "number" && values.hydrationMax > 0)
+    ? values.hydrationMax
+    : (typeof st?.water?.max === "number" && st.water.max > 0 ? st.water.max : 105);
+
+  const sta = (typeof values.stamina === "number")
+    ? values.stamina
+    : (typeof st?.stamina?.current === "number" ? st.stamina.current : 109);
+  const staMax = (typeof values.staminaMax === "number" && values.staminaMax > 0)
+    ? values.staminaMax
+    : (typeof st?.stamina?.max === "number" && st.stamina.max > 0 ? st.stamina.max : 109);
 
   const hydR = clamp01(hyd / hydMax);
   const staR = clamp01(sta / staMax);
@@ -288,8 +309,8 @@ export function drawVitals(ctx, anchorX, anchorY, values = {}) {
 
     const boxX = x1 - (rOuter + leftGap + boxW);
     drawHealth(ctx, boxX, y, {
-      health: values.health,
-      healthMax: values.healthMax,
+      health,
+      healthMax,
       heartSize,
       barW,
       barH,
