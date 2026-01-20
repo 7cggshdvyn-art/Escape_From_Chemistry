@@ -167,8 +167,8 @@ function drawHealth(ctx, x, centerY, values = {}) {
 
   ctx.save();
 
-  // 很淡的黑色背景框住整組
-  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+  // 很淡的黑色背景框住整組（更淡）
+  ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
   roundRectPath(ctx, x, boxY, boxW, boxH, 10);
   ctx.fill();
 
@@ -192,26 +192,41 @@ function drawHealth(ctx, x, centerY, values = {}) {
   const barX = heartX + heartSize + gap;
   const barY = centerY - barH / 2;
 
+  // 文字：health/healthMax（在血條上方）
+  {
+    const txt = `${Math.max(0, Math.round(health))}/${Math.max(1, Math.round(healthMax))}`;
+    ctx.save();
+    ctx.font = "12px sans-serif";
+    ctx.textBaseline = "bottom";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+    ctx.fillText(txt, barX, barY - 2);
+    ctx.restore();
+  }
+
   // bar background
   ctx.globalAlpha = 1;
   ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
   roundRectPath(ctx, barX, barY, barW, barH, barH / 2);
   ctx.fill();
 
-  // bar fill：白為主、帶一點淡紅
+  // bar fill：紅為主，帶一點白色高光
   const fillW = Math.max(0, barW * ratio);
   if (fillW > 0) {
     const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
-    grad.addColorStop(0.0, "rgba(255, 255, 255, 0.92)");
-    grad.addColorStop(0.85, "rgba(255, 255, 255, 0.88)");
-    grad.addColorStop(1.0, "rgba(255, 120, 120, 0.55)");
+    // 以紅色為主，帶一點白色高光
+    grad.addColorStop(0.0, "rgba(255, 255, 255, 0.55)");
+    grad.addColorStop(0.18, "rgba(255, 120, 120, 0.92)");
+    grad.addColorStop(1.0, "rgba(210, 60, 60, 0.92)");
     ctx.fillStyle = grad;
     roundRectPath(ctx, barX, barY, fillW, barH, barH / 2);
     ctx.fill();
   }
 
-  // subtle outline
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.28)";
+  // subtle outline（更淡）
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
   ctx.lineWidth = 1;
   roundRectPath(ctx, x + 0.5, boxY + 0.5, boxW - 1, boxH - 1, 10);
   ctx.stroke();
