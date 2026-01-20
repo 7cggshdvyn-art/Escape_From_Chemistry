@@ -2,6 +2,7 @@ import { player } from "./player.js";
 import { initRender, renderFrame } from "./render.js";
 import Enemy from "./enemy.js";
 import rifleData from "../data/weapon/rifle/data_rifle.js";
+import { applyDamage } from "./damage.js";
 
 import { isUIFocus, setUIFocus, keys } from "./input.js";
 import characterData from "../data/character/data_character.js";
@@ -624,26 +625,39 @@ function tryFire(player, now) {
   }
 
   if (bestHit && bestHit.enemy) {
-    // 需要「準星夠接近命中點」才算命中（讓手感更合理、也比較好命中）
-    const dAim = Math.hypot(bestHit.x - aimX, bestHit.y - aimY);
-    if (dAim <= aimTolerancePx) {
-      // 只有爆頭才套用 critMultiplier（enemy.takeHit 內已處理）
-      const baseDamage = w.def.stats.damage;
-      const critMul = w.def.stats.critMultiplier ?? 1;
-      bestHit.enemy.takeHit(baseDamage, { part: bestHit.part }, critMul);
+  const dAim = Math.hypot(bestHit.x - aimX, bestHit.y - aimY);
+  if (dAim <= aimTolerancePx) {
+    // ===== Damage.js（Step 2）：命中成立就交給 damage 系統統一計算並扣血 =====
+    const applied = applyDamage({
+      enemy: bestHit.enemy,
+      weaponStats: w.def.stats,
+      hitPart: bestHit.part,
 
-      // 讓紅線/可視化停在命中點
-      finalTargetX = bestHit.x;
-      finalTargetY = bestHit.y;
+      // 先預留（沒有就用預設）
+      difficultyMultiplier: (typeof window.__difficultyMul === "number") ? window.__difficultyMul : 1,
+      elementBonusSum: (typeof window.__elementBonusSum === "number") ? window.__elementBonusSum : 0,
+    });
 
-      // debug：記錄命中部位
-      window.__lastHitPart = bestHit.part;
-    } else {
-      window.__lastHitPart = null;
-    }
+    // 保留命中資訊給 UI / debug 用
+    window.__lastHitPart = bestHit.part;
+    window.__lastHitEnemy = bestHit.enemy;
+    window.__lastAppliedDamage = applied;
+
+    // 讓紅線/可視化停在命中點
+    finalTargetX = bestHit.x;
+    finalTargetY = bestHit.y;
+
+    // 命中點座標（之後做血花/火花）
+    window.__lastHitX = bestHit.x;
+    window.__lastHitY = bestHit.y;
   } else {
     window.__lastHitPart = null;
+    window.__lastHitEnemy = null;
   }
+} else {
+  window.__lastHitPart = null;
+  window.__lastHitEnemy = null;
+}
 
   // 先把射擊用的角度/目標點暴露出去（之後你想讓紅線顯示實際彈道就能直接用）
   window.__lastShotAngle = shotAngleFinal;
