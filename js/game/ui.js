@@ -22,17 +22,17 @@ function clamp01(v) {
 }
 
 function makeNeonGradient(ctx, x, y, r, theme) {
-  const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
+  const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r);
   if (theme === "water") {
-    // 藍白藍
-    g.addColorStop(0.0, "rgba(120, 220, 255, 0.95)");
-    g.addColorStop(0.5, "rgba(255, 255, 255, 0.95)");
-    g.addColorStop(1.0, "rgba(40, 140, 255, 0.95)");
+    // 白色為主，藍色只作為邊緣提示
+    g.addColorStop(0.0, "rgba(255, 255, 255, 0.98)");
+    g.addColorStop(0.75, "rgba(255, 255, 255, 0.95)");
+    g.addColorStop(1.0, "rgba(90, 185, 255, 0.85)");
   } else {
-    // 橙白橙
-    g.addColorStop(0.0, "rgba(255, 190, 90, 0.95)");
-    g.addColorStop(0.5, "rgba(255, 255, 255, 0.95)");
-    g.addColorStop(1.0, "rgba(255, 120, 40, 0.95)");
+    // 白色為主，橙色只作為邊緣提示
+    g.addColorStop(0.0, "rgba(255, 255, 255, 0.98)");
+    g.addColorStop(0.75, "rgba(255, 255, 255, 0.95)");
+    g.addColorStop(1.0, "rgba(255, 165, 80, 0.85)");
   }
   return g;
 }
@@ -62,7 +62,7 @@ function drawRing(ctx, x, y, r, ratio, theme) {
   ctx.strokeStyle = grad;
   ctx.globalAlpha = 0.35;
   ctx.shadowBlur = r * 0.9;
-  ctx.shadowColor = theme === "water" ? "rgba(80, 180, 255, 0.9)" : "rgba(255, 150, 60, 0.9)";
+  ctx.shadowColor = theme === "water" ? "rgba(90, 185, 255, 0.55)" : "rgba(255, 165, 80, 0.55)";
   ctx.beginPath();
   ctx.arc(x, y, r, start, end);
   ctx.stroke();
@@ -102,7 +102,7 @@ function drawOuterThinRing(ctx, x, y, rOuter, ratio, theme) {
   // 薄進度圈
   ctx.strokeStyle = grad;
   ctx.shadowBlur = rOuter * 0.55;
-  ctx.shadowColor = theme === "water" ? "rgba(80, 180, 255, 0.85)" : "rgba(255, 150, 60, 0.85)";
+  ctx.shadowColor = theme === "water" ? "rgba(90, 185, 255, 0.5)" : "rgba(255, 165, 80, 0.5)";
   ctx.beginPath();
   ctx.arc(x, y, rOuter, start, end);
   ctx.stroke();
@@ -113,7 +113,7 @@ function drawOuterThinRing(ctx, x, y, rOuter, ratio, theme) {
 function drawIcon(ctx, x, y, size, img, ready) {
   // 內底
   ctx.save();
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
   ctx.beginPath();
   ctx.arc(x, y, size * 0.52, 0, Math.PI * 2);
   ctx.fill();
@@ -145,7 +145,7 @@ export function drawVitals(ctx, anchorX, anchorY, values = {}) {
   if (!ctx) return;
 
   const r = typeof values.radius === "number" ? values.radius : 18;
-  const gap = typeof values.gap === "number" ? values.gap : 16;
+  const gap = typeof values.gap === "number" ? values.gap : 24;
 
   const hyd = (typeof values.hydration === "number") ? values.hydration : 100;
   const hydMax = (typeof values.hydrationMax === "number" && values.hydrationMax > 0) ? values.hydrationMax : 100;
@@ -165,10 +165,10 @@ export function drawVitals(ctx, anchorX, anchorY, values = {}) {
   // 水分（左）
   drawOuterThinRing(ctx, x1, y, rOuter, hydR, "water");
   drawRing(ctx, x1, y, r, hydR, "water");
-  drawIcon(ctx, x1, y, r * 1.2, waterImg, waterReady);
+  drawIcon(ctx, x1, y, r * 1.0, waterImg, waterReady);
 
   // 體力（右）
   drawOuterThinRing(ctx, x2, y, rOuter, staR, "stamina");
   drawRing(ctx, x2, y, r, staR, "stamina");
-  drawIcon(ctx, x2, y, r * 1.2, stamImg, stamReady);
+  drawIcon(ctx, x2, y, r * 1.0, stamImg, stamReady);
 }
