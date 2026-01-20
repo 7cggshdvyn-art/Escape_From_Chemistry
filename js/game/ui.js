@@ -10,7 +10,7 @@ let heartImg = null;
 let heartReady = false;
 
 export function initUI() {
-  // 預載兩張圖示（你也可以不放圖，照樣會畫圈）
+  // 預載圖示
   waterImg = new Image();
   waterImg.src = WATER_ICON_SRC;
   waterImg.onload = () => (waterReady = true);
@@ -31,12 +31,12 @@ function clamp01(v) {
 function makeNeonGradient(ctx, x, y, r, theme) {
   const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r);
   if (theme === "water") {
-    // 白色為主，藍色只作為邊緣提示
+    // 白色為主，藍色作為邊緣
     g.addColorStop(0.0, "rgba(255, 255, 255, 0.98)");
     g.addColorStop(0.75, "rgba(255, 255, 255, 0.95)");
     g.addColorStop(1.0, "rgba(90, 185, 255, 0.85)");
   } else {
-    // 白色為主，橙色只作為邊緣提示
+    // 白色為主，橙色作為邊緣
     g.addColorStop(0.0, "rgba(255, 255, 255, 0.98)");
     g.addColorStop(0.75, "rgba(255, 255, 255, 0.95)");
     g.addColorStop(1.0, "rgba(255, 165, 80, 0.85)");
@@ -58,7 +58,7 @@ function drawRing(ctx, x, y, r, ratio, theme) {
   ctx.stroke();
   ctx.restore();
 
-  // 霓虹進度圈（多描幾次做 glow）
+  // 霓虹進度圈
   const grad = makeNeonGradient(ctx, x, y, r, theme);
 
   ctx.save();
@@ -269,10 +269,10 @@ export function drawVitals(ctx, anchorX, anchorY, values = {}) {
   const x2 = anchorX + (r * 2 + gap);
   const y = anchorY;
 
-  // 外薄圈半徑（窄一點的外環）
+  // 外薄圈半徑
   const rOuter = r + Math.max(4, r * 0.35);
 
-  // ===== Health（在水分左邊，預留足夠空間做 health bar） =====
+  // Health
   {
     const heartSize = 22;
     const barW = 110;
