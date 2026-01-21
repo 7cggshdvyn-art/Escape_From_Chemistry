@@ -796,8 +796,8 @@ function drawInventoryLeftPanel() {
   const innerW = panelW - padding * 2;
 
   // 右側欄（兩個獨立格子）
-  const rightColW = 118;
-  const gutter = 14;
+  const rightColW = 92; // 縮到剛好包住右側大格
+  const gutter = 8;     // 更貼近裝備區
   const leftW = innerW - rightColW - gutter;
   const rightX = innerX + leftW + gutter;
 
@@ -911,17 +911,6 @@ function drawInventorySection(x, y, w, h, title) {
 function drawInventoryBackpack(x, y, w, h) {
   ctx.save();
 
-  // Box（淡藍，統一色）
-  ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
-  roundRect(ctx, x, y, w, h, 14);
-  ctx.fill();
-
-  // Box border
-  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
-  ctx.lineWidth = 2;
-  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 14);
-  ctx.stroke();
-
   // Header（預留文字區）
   const headerH = 28;
   ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
@@ -933,35 +922,30 @@ function drawInventoryBackpack(x, y, w, h) {
   ctx.textBaseline = "middle";
   ctx.fillText("背包", x + 18, y + 8 + headerH / 2);
 
-  // ===== Top visible row only (5 slots) =====
+  // ===== Visible grid: 5 x 5 =====
   const cols = 5;
+  const rows = 5;
   const size = 54;
   const gap = 6;
 
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
-  const sy = y + 8 + headerH + 12;
+  let sy = y + 8 + headerH + 12;
 
-  for (let c = 0; c < cols; c++) {
-    const sx = startX + c * (size + gap);
-    ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
-    roundRect(ctx, sx, sy, size, size, 14);
-    ctx.fill();
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const sx = startX + c * (size + gap);
+      ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+      roundRect(ctx, sx, sy, size, size, 14);
+      ctx.fill();
 
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 14);
-    ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.lineWidth = 1.5;
+      roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 14);
+      ctx.stroke();
+    }
+    sy += size + gap;
   }
-
-  // ===== Thin white separator =====
-  const lineY = sy + size + 10;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(x + 10, lineY);
-  ctx.lineTo(x + w - 10, lineY);
-  ctx.stroke();
 
   ctx.restore();
 }
