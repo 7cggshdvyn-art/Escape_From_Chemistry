@@ -760,41 +760,124 @@ function drawActionBar() {
   ctx.restore();
 }
 
-// ===== Inventory UI: Left Panel =====
+// 右側欄位下方小圖示（路徑你之後自己換）
+const INV_RIGHT_ICON_SRC = "images/ui/hud/backpack/safe.png";
+let invRightIconImg = null;
+let invRightIconReady = false;
+function ensureInvRightIconLoaded() {
+  if (invRightIconImg) return;
+  invRightIconImg = new Image();
+  invRightIconImg.src = INV_RIGHT_ICON_SRC;
+  invRightIconImg.onload = () => (invRightIconReady = true);
+  invRightIconImg.onerror = () => {
+    console.warn("inventory right icon load failed:", INV_RIGHT_ICON_SRC);
+  };
+}
+
 function drawInventoryLeftPanel() {
+  ensureInvRightIconLoaded();
+
   const panelX = 24;
   const panelY = 24;
-  const panelW = Math.min(420, canvas.width * 0.36);
+  const panelW = Math.min(460, canvas.width * 0.40);
   const panelH = canvas.height - panelY * 2;
 
   ctx.save();
 
-  // ===== Panel background（淡藍玻璃感） =====
-  ctx.fillStyle = "rgba(110, 185, 255, 0.18)";
+  // ===== Panel background（淡藍但更深一點） =====
+  ctx.fillStyle = "rgba(60, 120, 175, 0.22)";
   roundRect(ctx, panelX, panelY, panelW, panelH, 14);
   ctx.fill();
 
-  // 外框（淡藍）
-  ctx.strokeStyle = "rgba(180, 230, 255, 0.35)";
+  // 外框（淡藍、稍深）
+  ctx.strokeStyle = "rgba(160, 220, 255, 0.30)";
   ctx.lineWidth = 2;
   roundRect(ctx, panelX + 0.5, panelY + 0.5, panelW - 1, panelH - 1, 14);
   ctx.stroke();
 
-  // ===== Sections =====
+  // ===== Layout split =====
   const padding = 16;
   const innerX = panelX + padding;
   const innerY = panelY + padding;
   const innerW = panelW - padding * 2;
 
-  // Equipment (top)
-  const equipH = 190; // 兩排裝備 + 內建標題區
-  drawInventorySection(innerX, innerY, innerW, equipH, "裝備");
+  // 右側欄（兩個大格）
+  const rightColW = 118;
+  const gutter = 14;
+  const leftW = innerW - rightColW - gutter;
+  const rightX = innerX + leftW + gutter;
 
-  // Backpack (bottom)
-  const gap = 22; // 裝備/背包之間留更明顯的空隙
+  // Equipment (left/top)
+  const equipH = 190; // 兩排裝備 + 內建標題區
+  drawInventorySection(innerX, innerY, leftW, equipH, "裝備");
+
+  // Right column aligned to equipment top
+  drawInventoryRightColumn(rightX, innerY, rightColW, equipH);
+
+  // Backpack (left/bottom)
+  const gap = 22; // 裝備/背包之間留空隙
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
-  drawInventoryBackpack(innerX, bagY, innerW, bagH);
+  drawInventoryBackpack(innerX, bagY, leftW, bagH);
+
+  ctx.restore();
+}
+
+function drawInventoryRightColumn(x, y, w, equipH) {
+  ctx.save();
+
+  // 背景盒（跟左側區塊一致）
+  ctx.fillStyle = "rgba(25, 55, 85, 0.52)";
+  roundRect(ctx, x, y, w, equipH, 12);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, equipH - 1, 12);
+  ctx.stroke();
+
+  // 兩個大格（直排）
+  const slotW = w - 18;
+  const slotH = 86;
+  const slotX = x + 9;
+  const topPad = 10;
+  const vGap = 10;
+
+  const s1Y = y + topPad;
+  const s2Y = s1Y + slotH + vGap;
+
+  for (const sy of [s1Y, s2Y]) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+    roundRect(ctx, slotX, sy, slotW, slotH, 12);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(220, 245, 255, 0.22)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, slotX + 0.5, sy + 0.5, slotW - 1, slotH - 1, 12);
+    ctx.stroke();
+  }
+
+  // 小圖示（在兩個大格下面，置中）
+  const iconSize = 22;
+  const iconX = x + w / 2 - iconSize / 2;
+  const iconY = s2Y + slotH + 10;
+
+  if (invRightIconImg && invRightIconReady && invRightIconImg.naturalWidth > 0) {
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(invRightIconImg, iconX, iconY, iconSize, iconSize);
+    ctx.restore();
+  } else {
+    // placeholder
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.beginPath();
+    ctx.arc(iconX + iconSize / 2, iconY + iconSize / 2, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
   ctx.restore();
 }
@@ -803,23 +886,23 @@ function drawInventorySection(x, y, w, h, title) {
   ctx.save();
 
   // Box（淡藍）
-  ctx.fillStyle = "rgba(25, 55, 85, 0.38)";
+  ctx.fillStyle = "rgba(25, 55, 85, 0.52)";
   roundRect(ctx, x, y, w, h, 12);
   ctx.fill();
 
   // Box border
-  ctx.strokeStyle = "rgba(180, 230, 255, 0.28)";
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
   ctx.lineWidth = 2;
   roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 12);
   ctx.stroke();
 
   // Header（預留文字區）
   const headerH = 28;
-  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   roundRect(ctx, x + 8, y + 8, w - 16, headerH, 10);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
   ctx.font = "15px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
   ctx.fillText(title, x + 18, y + 8 + headerH / 2);
@@ -827,21 +910,21 @@ function drawInventorySection(x, y, w, h, title) {
   // Equipment slots：5 欄 x 2 排
   const cols = 5;
   const rows = 2;
-  const size = 56;
-  const gap = 10;
+  const size = 54;
+  const gap = 6;
 
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
-  let sy = y + 8 + headerH + 14;
+  let sy = y + 8 + headerH + 10;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const sx = startX + c * (size + gap);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
       roundRect(ctx, sx, sy, size, size, 10);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(220, 245, 255, 0.30)";
+      ctx.strokeStyle = "rgba(220, 245, 255, 0.22)";
       ctx.lineWidth = 2;
       roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 10);
       ctx.stroke();
@@ -856,48 +939,48 @@ function drawInventoryBackpack(x, y, w, h) {
   ctx.save();
 
   // Box（淡藍）
-  ctx.fillStyle = "rgba(25, 55, 85, 0.38)";
+  ctx.fillStyle = "rgba(25, 55, 85, 0.52)";
   roundRect(ctx, x, y, w, h, 12);
   ctx.fill();
 
   // Box border
-  ctx.strokeStyle = "rgba(180, 230, 255, 0.28)";
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
   ctx.lineWidth = 2;
   roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 12);
   ctx.stroke();
 
   // Header（預留文字區）
   const headerH = 28;
-  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   roundRect(ctx, x + 8, y + 8, w - 16, headerH, 10);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
   ctx.font = "15px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
   ctx.fillText("背包", x + 18, y + 8 + headerH / 2);
 
   // Header 下方預留一點空間給按鈕（先不畫按鈕）
-  const buttonAreaH = 34;
+  const buttonAreaH = 30;
   // Grid：固定 5x5（其餘之後用滑動）
   const cols = 5;
   const rows = 5;
-  const size = 56;
-  const gap = 10;
+  const size = 54;
+  const gap = 6;
 
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
-  let sy = y + 8 + headerH + 14 + buttonAreaH;
+  let sy = y + 8 + headerH + 10 + buttonAreaH;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const sx = startX + c * (size + gap);
 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
       roundRect(ctx, sx, sy, size, size, 10);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(220, 245, 255, 0.28)";
+      ctx.strokeStyle = "rgba(220, 245, 255, 0.22)";
       ctx.lineWidth = 2;
       roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 10);
       ctx.stroke();
