@@ -819,7 +819,7 @@ function drawInventoryLeftPanel() {
   const backpackGridH = headerH + 12 + rows * size + (rows - 1) * gapSlot;
   const leftBgH = (bagY - innerY) + backpackGridH + 10;
   ctx.save();
-  ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
   roundRect(ctx, innerX, innerY, leftW, leftBgH, 14);
   ctx.fill();
   ctx.restore();
@@ -840,7 +840,7 @@ function drawInventoryRightColumn(x, y, w, equipH) {
   const s2Y = s1Y + slotH + vGap;
 
   for (const sy of [s1Y, s2Y]) {
-    ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+    ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
     roundRect(ctx, slotX, sy, slotW, slotH, 14);
     ctx.fill();
 
@@ -855,6 +855,11 @@ function drawInventoryRightColumn(x, y, w, equipH) {
   const iconX = x + w / 2 - iconSize / 2;
   const iconY = s2Y + slotH + 8;
 
+  // icon 背景（與左側一致的深藍，獨立圓角）
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+  roundRect(ctx, iconX - 8, iconY - 8, iconSize + 16, iconSize + 16, 12);
+  ctx.fill();
+
   if (invRightIconImg && invRightIconReady && invRightIconImg.naturalWidth > 0) {
     ctx.save();
     ctx.globalAlpha = 0.85;
@@ -868,8 +873,8 @@ function drawInventoryRightColumn(x, y, w, equipH) {
 function drawInventorySection(x, y, w, h, title) {
   ctx.save();
 
-  // Box（淡藍，統一色）
-  ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+  // Box（深藍，統一色）
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
   roundRect(ctx, x, y, w, h, 14);
   ctx.fill();
 
@@ -890,20 +895,32 @@ function drawInventorySection(x, y, w, h, title) {
   ctx.textBaseline = "middle";
   ctx.fillText(title, x + 18, y + 8 + headerH / 2);
 
-  // Equipment slots：5 欄 x 2 排
+  // Equipment slots：5 欄 x 2 排（含文字標籤）
   const cols = 5;
   const rows = 2;
   const size = 54;
   const gap = 6;
 
+  // 裝備格對應文字（左→右，上→下）
+  const labels = [
+    "枪械", "枪械", "近战武器", "头部", "身体",
+    "面部", "耳机", "背包", "图腾", "图腾"
+  ];
+
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
+
   let sy = y + 8 + headerH + 10;
+  const labelGap = 16; // 上下兩排中間刻意拉開，給文字空間
+
+  let labelIndex = 0;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const sx = startX + c * (size + gap);
-      ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+
+      // 格子本體
+      ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
       roundRect(ctx, sx, sy, size, size, 14);
       ctx.fill();
 
@@ -911,8 +928,20 @@ function drawInventorySection(x, y, w, h, title) {
       ctx.lineWidth = 1.5;
       roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 14);
       ctx.stroke();
+
+      // 文字（格子正下方）
+      const text = labels[labelIndex++] ?? "";
+      if (text) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+        ctx.font = "12px system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(text, sx + size / 2, sy + size + 4);
+      }
     }
-    sy += size + gap;
+
+    // 第一排與第二排之間，多留一段距離（讓上排文字不擠）
+    sy += size + gap + labelGap;
   }
 
   ctx.restore();
@@ -945,7 +974,7 @@ function drawInventoryBackpack(x, y, w, h) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const sx = startX + c * (size + gap);
-      ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+      ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
       roundRect(ctx, sx, sy, size, size, 14);
       ctx.fill();
 
