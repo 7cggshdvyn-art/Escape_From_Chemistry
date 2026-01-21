@@ -767,10 +767,16 @@ function drawInventoryLeftPanel() {
 
   ctx.save();
 
-  // ===== Panel background =====
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  // ===== Panel background（淡藍玻璃感） =====
+  ctx.fillStyle = "rgba(110, 185, 255, 0.18)";
   roundRect(ctx, panelX, panelY, panelW, panelH, 14);
   ctx.fill();
+
+  // 外框（淡藍）
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.35)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, panelX + 0.5, panelY + 0.5, panelW - 1, panelH - 1, 14);
+  ctx.stroke();
 
   // ===== Sections =====
   const padding = 16;
@@ -778,12 +784,12 @@ function drawInventoryLeftPanel() {
   const innerY = panelY + padding;
   const innerW = panelW - padding * 2;
 
-  // Equipment (top, smaller)
-  const equipH = 140;
+  // Equipment (top)
+  const equipH = 190; // 兩排裝備 + 內建標題區
   drawInventorySection(innerX, innerY, innerW, equipH, "裝備");
 
-  // Backpack (bottom, larger)
-  const gap = 14;
+  // Backpack (bottom)
+  const gap = 22; // 裝備/背包之間留更明顯的空隙
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
   drawInventoryBackpack(innerX, bagY, innerW, bagH);
@@ -794,30 +800,51 @@ function drawInventoryLeftPanel() {
 function drawInventorySection(x, y, w, h, title) {
   ctx.save();
 
-  // Title
-  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.font = "15px system-ui, -apple-system, sans-serif";
-  ctx.textBaseline = "top";
-  ctx.fillText(title, x + 4, y - 20);
-
-  // Box
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  roundRect(ctx, x, y, w, h, 10);
+  // Box（淡藍）
+  ctx.fillStyle = "rgba(25, 55, 85, 0.38)";
+  roundRect(ctx, x, y, w, h, 12);
   ctx.fill();
 
-  // Equipment slots (5 columns)
+  // Box border
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.28)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 12);
+  ctx.stroke();
+
+  // Header（預留文字區）
+  const headerH = 28;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  roundRect(ctx, x + 8, y + 8, w - 16, headerH, 10);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.font = "15px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.fillText(title, x + 18, y + 8 + headerH / 2);
+
+  // Equipment slots：5 欄 x 2 排
   const cols = 5;
+  const rows = 2;
   const size = 56;
   const gap = 10;
-  const startX = x + (w - (cols * size + (cols - 1) * gap)) / 2;
-  const sy = y + 22;
 
-  for (let i = 0; i < cols; i++) {
-    const sx = startX + i * (size + gap);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.lineWidth = 2;
-    roundRect(ctx, sx, sy, size, size, 8);
-    ctx.stroke();
+  const gridW = cols * size + (cols - 1) * gap;
+  const startX = x + (w - gridW) / 2;
+  let sy = y + 8 + headerH + 14;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const sx = startX + c * (size + gap);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+      roundRect(ctx, sx, sy, size, size, 10);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(220, 245, 255, 0.30)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 10);
+      ctx.stroke();
+    }
+    sy += size + gap;
   }
 
   ctx.restore();
@@ -826,38 +853,55 @@ function drawInventorySection(x, y, w, h, title) {
 function drawInventoryBackpack(x, y, w, h) {
   ctx.save();
 
-  // Title
-  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.font = "15px system-ui, -apple-system, sans-serif";
-  ctx.textBaseline = "top";
-  ctx.fillText("背包", x + 4, y - 20);
-
-  // Box
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  roundRect(ctx, x, y, w, h, 10);
+  // Box（淡藍）
+  ctx.fillStyle = "rgba(25, 55, 85, 0.38)";
+  roundRect(ctx, x, y, w, h, 12);
   ctx.fill();
 
-  // Grid (5 columns)
+  // Box border
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.28)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 12);
+  ctx.stroke();
+
+  // Header（預留文字區）
+  const headerH = 28;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  roundRect(ctx, x + 8, y + 8, w - 16, headerH, 10);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.font = "15px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.fillText("背包", x + 18, y + 8 + headerH / 2);
+
+  // Grid：固定 5x5（其餘之後用滑動）
   const cols = 5;
+  const rows = 5;
   const size = 56;
   const gap = 10;
-  const rows = Math.max(1, Math.floor((h - 24) / (size + gap)));
 
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
-  let sy = y + 20;
+  let sy = y + 8 + headerH + 14;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const sx = startX + c * (size + gap);
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+      roundRect(ctx, sx, sy, size, size, 10);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(220, 245, 255, 0.28)";
       ctx.lineWidth = 2;
-      roundRect(ctx, sx, sy, size, size, 8);
+      roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 10);
       ctx.stroke();
     }
     sy += size + gap;
   }
+
+  // （預留）之後滑動提示/捲動條可以畫在這裡
 
   ctx.restore();
 }
