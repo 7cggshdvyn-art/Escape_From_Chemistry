@@ -955,6 +955,17 @@ function drawInventorySection(x, y, w, h, title) {
 function drawInventoryBackpack(x, y, w, h) {
   ctx.save();
 
+  // Box（背包區：與裝備區完全一致）
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+  roundRect(ctx, x, y, w, h, 14);
+  ctx.fill();
+
+  // Box border（與裝備區完全一致）
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 14);
+  ctx.stroke();
+
   // Header（預留文字區）
   const headerH = 28;
   ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
