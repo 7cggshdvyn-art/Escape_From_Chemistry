@@ -761,7 +761,7 @@ function drawActionBar() {
 }
 
 // 右側欄位下方小圖示（路徑你之後自己換）
-const INV_RIGHT_ICON_SRC = "images/ui/hud/backpack/icon_safe.png";
+const INV_RIGHT_ICON_SRC = "images/ui/backpack/icon_safe.png";
 let invRightIconImg = null;
 let invRightIconReady = false;
 function ensureInvRightIconLoaded() {
