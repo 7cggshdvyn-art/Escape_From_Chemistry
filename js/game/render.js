@@ -798,16 +798,11 @@ function drawInventoryLeftPanel() {
 
   // Equipment (left/top)
   const equipH = 190; // 兩排裝備 + 內建標題區
-  drawInventorySection(innerX, innerY, leftW, equipH, "裝備");
-
-  // Right column aligned to equipment top
-  drawInventoryRightColumn(rightX, innerY, rightColW, equipH);
 
   // Backpack (left/bottom)
   const gap = 22; // 裝備/背包之間留空隙
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
-  drawInventoryBackpack(innerX, bagY, leftW, bagH);
 
   // ===== 左側深藍背景（只到背包最後一排） =====
   // 只包裝備 + 背包區（高度之後算）
@@ -824,14 +819,28 @@ function drawInventoryLeftPanel() {
   ctx.fill();
   ctx.restore();
 
+  drawInventorySection(innerX, innerY, leftW, equipH, "裝備");
+  drawInventoryRightColumn(rightX, innerY, rightColW, equipH);
+  drawInventoryBackpack(innerX, bagY, leftW, bagH);
+
   ctx.restore();
 }
 
 function drawInventoryRightColumn(x, y, w, equipH) {
   ctx.save();
 
+  // 右欄整體背景（獨立、圓角）
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+  roundRect(ctx, x, y, w, equipH, 14);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, equipH - 1, 14);
+  ctx.stroke();
+
   const slotW = w - 28;
-  const slotH = 68; // smaller
+  const slotH = 68;
   const slotX = x + (w - slotW) / 2;
   const topPad = 10;
   const vGap = 10;
@@ -850,19 +859,15 @@ function drawInventoryRightColumn(x, y, w, equipH) {
     ctx.stroke();
   }
 
-  // Small icon under the two slots
-  const iconSize = 38; // 放大
+  // 下面小圖片（縮小一點、稍微往上）
+  const iconSize = 28;
   const iconX = x + w / 2 - iconSize / 2;
-  const iconY = s2Y + slotH + 2; // 往上移
-
-  // icon 背景（與左側一致的深藍，獨立圓角）
-  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
-  roundRect(ctx, iconX - 8, iconY - 8, iconSize + 16, iconSize + 16, 12);
-  ctx.fill();
+  const iconY = s2Y + slotH + 2;
 
   if (invRightIconImg && invRightIconReady && invRightIconImg.naturalWidth > 0) {
     ctx.save();
-    ctx.globalAlpha = 0.85;
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(invRightIconImg, iconX, iconY, iconSize, iconSize);
     ctx.restore();
   }
