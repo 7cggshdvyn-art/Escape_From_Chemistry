@@ -784,11 +784,6 @@ function drawInventoryLeftPanel() {
 
   ctx.save();
 
-  // ===== Panel background（統一淡藍色） =====
-  ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
-  roundRect(ctx, panelX, panelY, panelW, panelH, 14);
-  ctx.fill();
-
   // ===== Layout split =====
   const padding = 16;
   const innerX = panelX + padding;
@@ -813,6 +808,21 @@ function drawInventoryLeftPanel() {
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
   drawInventoryBackpack(innerX, bagY, leftW, bagH);
+
+  // ===== 左側淡藍背景（只到背包最後一排） =====
+  // 只包裝備 + 背包區（高度之後算）
+  const headerH = 28;
+  const size = 54;
+  const gapSlot = 6;
+  const rows = 5;
+  // 背包格子實際高度
+  const backpackGridH = headerH + 12 + rows * size + (rows - 1) * gapSlot;
+  const leftBgH = (bagY - innerY) + backpackGridH + 10;
+  ctx.save();
+  ctx.fillStyle = "rgba(90, 160, 210, 0.22)";
+  roundRect(ctx, innerX, innerY, leftW, leftBgH, 14);
+  ctx.fill();
+  ctx.restore();
 
   ctx.restore();
 }
@@ -841,7 +851,7 @@ function drawInventoryRightColumn(x, y, w, equipH) {
   }
 
   // Small icon under the two slots
-  const iconSize = 20;
+  const iconSize = 30;
   const iconX = x + w / 2 - iconSize / 2;
   const iconY = s2Y + slotH + 8;
 
