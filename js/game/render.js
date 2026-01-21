@@ -137,11 +137,7 @@ export function renderFrame(player, fireVisual = {}) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // ===== Inventory UI =====
-  if (window.__uiPanel === "inventory") {
-    drawInventoryLeftPanel();
-    return; // 不畫準心 / HUD / hotbar / action bar
-  }
+  const inventoryOpen = (window.__uiPanel === "inventory");
 
   // 画玩家（箭头图：指向鼠标）
   const x = player.x;
@@ -188,6 +184,12 @@ export function renderFrame(player, fireVisual = {}) {
   // 由 game.js 提供：window.__enemies = [Enemy, ...]
   const enemies = Array.isArray(window.__enemies) ? window.__enemies : [];
   drawEnemies(enemies);
+
+  // Inventory 打開時：世界仍照畫，但 UI（準心/HUD/hotbar/action bar）要隱藏
+  if (inventoryOpen) {
+    drawInventoryLeftPanel();
+    return;
+  }
 
   // ===== 射击可视化：只在「射击瞬间」闪现 =====
   const now = performance.now();
@@ -875,6 +877,8 @@ function drawInventoryBackpack(x, y, w, h) {
   ctx.textBaseline = "middle";
   ctx.fillText("背包", x + 18, y + 8 + headerH / 2);
 
+  // Header 下方預留一點空間給按鈕（先不畫按鈕）
+  const buttonAreaH = 34;
   // Grid：固定 5x5（其餘之後用滑動）
   const cols = 5;
   const rows = 5;
@@ -883,7 +887,7 @@ function drawInventoryBackpack(x, y, w, h) {
 
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
-  let sy = y + 8 + headerH + 14;
+  let sy = y + 8 + headerH + 14 + buttonAreaH;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
