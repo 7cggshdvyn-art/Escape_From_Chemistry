@@ -798,24 +798,17 @@ function drawInventoryLeftPanel() {
 
   // Equipment (left/top)
   const equipH = 190; // 兩排裝備 + 內建標題區
-  drawInventorySection(innerX, innerY, leftW, equipH, "裝備");
-
-  // Right column aligned to equipment top
-  drawInventoryRightColumn(rightX, innerY, rightColW, equipH);
 
   // Backpack (left/bottom)
   const gap = 22; // 裝備/背包之間留空隙
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
-  drawInventoryBackpack(innerX, bagY, leftW, bagH);
 
-  // ===== 左側淡藍背景（只到背包最後一排） =====
-  // 只包裝備 + 背包區（高度之後算）
+  // ===== 左側背景（先畫，避免蓋到格子） =====
   const headerH = 28;
   const size = 54;
   const gapSlot = 6;
   const rows = 5;
-  // 背包格子實際高度
   const backpackGridH = headerH + 12 + rows * size + (rows - 1) * gapSlot;
   const leftBgH = (bagY - innerY) + backpackGridH + 10;
   ctx.save();
@@ -824,14 +817,29 @@ function drawInventoryLeftPanel() {
   ctx.fill();
   ctx.restore();
 
+  // 再畫內容（裝備/背包/右欄）
+  drawInventorySection(innerX, innerY, leftW, equipH, "裝備");
+  drawInventoryRightColumn(rightX, innerY, rightColW, equipH);
+  drawInventoryBackpack(innerX, bagY, leftW, bagH);
+
   ctx.restore();
 }
 
 function drawInventoryRightColumn(x, y, w, equipH) {
   ctx.save();
 
+  // 右欄背景（獨立、圓角，跟左側一致）
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+  roundRect(ctx, x, y, w, equipH, 14);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, equipH - 1, 14);
+  ctx.stroke();
+
   const slotW = w - 28;
-  const slotH = 68; // smaller
+  const slotH = 68;
   const slotX = x + (w - slotW) / 2;
   const topPad = 10;
   const vGap = 10;
@@ -850,19 +858,15 @@ function drawInventoryRightColumn(x, y, w, equipH) {
     ctx.stroke();
   }
 
-  // Small icon under the two slots
+  // 小圖片（不再畫圖片背景格子）
   const iconSize = 30;
   const iconX = x + w / 2 - iconSize / 2;
   const iconY = s2Y + slotH + 8;
 
-  // icon 背景（與左側一致的深藍，獨立圓角）
-  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
-  roundRect(ctx, iconX - 8, iconY - 8, iconSize + 16, iconSize + 16, 12);
-  ctx.fill();
-
   if (invRightIconImg && invRightIconReady && invRightIconImg.naturalWidth > 0) {
     ctx.save();
-    ctx.globalAlpha = 0.85;
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(invRightIconImg, iconX, iconY, iconSize, iconSize);
     ctx.restore();
   }
@@ -890,7 +894,7 @@ function drawInventorySection(x, y, w, h, title) {
   roundRect(ctx, x + 8, y + 8, w - 16, headerH, 12);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.fillStyle = "#FFFFFF";
   ctx.font = "15px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
   ctx.fillText(title, x + 18, y + 8 + headerH / 2);
@@ -932,7 +936,7 @@ function drawInventorySection(x, y, w, h, title) {
       // 文字（格子正下方）
       const text = labels[labelIndex++] ?? "";
       if (text) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.fillStyle = "#FFFFFF";
         ctx.font = "12px system-ui, -apple-system, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
@@ -950,13 +954,24 @@ function drawInventorySection(x, y, w, h, title) {
 function drawInventoryBackpack(x, y, w, h) {
   ctx.save();
 
+  // Box（深藍，統一色）
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+  roundRect(ctx, x, y, w, h, 14);
+  ctx.fill();
+
+  // Box border
+  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 14);
+  ctx.stroke();
+
   // Header（預留文字區）
   const headerH = 28;
   ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
   roundRect(ctx, x + 8, y + 8, w - 16, headerH, 12);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.fillStyle = "#FFFFFF";
   ctx.font = "15px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
   ctx.fillText("背包", x + 18, y + 8 + headerH / 2);
