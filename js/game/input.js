@@ -16,6 +16,9 @@ window.__fireLock = false;
 
 window.__gameStarted = false;
 
+// 目前開啟的 UI 面板（例如：inventory / settings / map ...）
+window.__uiPanel = null;
+
 
 // ===== UI / 暂停状态 =====
 let uiFocus = false; // true = 选单/ESC状态，角色不可移动
@@ -26,6 +29,11 @@ export function isUIFocus() {
 
 export function setUIFocus(state) {
   uiFocus = state;
+
+  // 離開 UI 時清掉面板（避免殘留狀態）
+  if (!uiFocus) {
+    window.__uiPanel = null;
+  }
 
   // 进入 UI 时：清空移动键，避免松不开
   if (uiFocus) {
@@ -104,6 +112,35 @@ window.addEventListener("keydown", (e) => {
     if (!window.__gameStarted) return;
 
     toggleUIFocus();
+    e.preventDefault();
+    return;
+  }
+
+  // E：背包（Inventory）開關
+  if (e.key === "e" || e.key === "E") {
+    // 主畫面/選單階段不處理
+    if (!window.__gameStarted) return;
+
+    // 按住不連發
+    if (e.repeat) {
+      e.preventDefault();
+      return;
+    }
+
+    if (!uiFocus) {
+      // 開背包
+      window.__uiPanel = "inventory";
+      setUIFocus(true);
+    } else {
+      // 已在 UI：若目前就是背包就關掉；否則切到背包
+      if (window.__uiPanel === "inventory") {
+        window.__uiPanel = null;
+        setUIFocus(false);
+      } else {
+        window.__uiPanel = "inventory";
+      }
+    }
+
     e.preventDefault();
     return;
   }

@@ -137,6 +137,12 @@ export function renderFrame(player, fireVisual = {}) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // ===== Inventory UI =====
+  if (window.__uiPanel === "inventory") {
+    drawInventoryLeftPanel();
+    return; // 不畫準心 / HUD / hotbar / action bar
+  }
+
   // 画玩家（箭头图：指向鼠标）
   const x = player.x;
   const y = player.y;
@@ -748,6 +754,110 @@ function drawActionBar() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.92)";
   ctx.fillText(cancelText, centerX, boxY + (boxH - 13) / 2 + 1);
   ctx.restore();
+
+  ctx.restore();
+}
+
+// ===== Inventory UI: Left Panel =====
+function drawInventoryLeftPanel() {
+  const panelX = 24;
+  const panelY = 24;
+  const panelW = Math.min(420, canvas.width * 0.36);
+  const panelH = canvas.height - panelY * 2;
+
+  ctx.save();
+
+  // ===== Panel background =====
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  roundRect(ctx, panelX, panelY, panelW, panelH, 14);
+  ctx.fill();
+
+  // ===== Sections =====
+  const padding = 16;
+  const innerX = panelX + padding;
+  const innerY = panelY + padding;
+  const innerW = panelW - padding * 2;
+
+  // Equipment (top, smaller)
+  const equipH = 140;
+  drawInventorySection(innerX, innerY, innerW, equipH, "裝備");
+
+  // Backpack (bottom, larger)
+  const gap = 14;
+  const bagY = innerY + equipH + gap;
+  const bagH = panelH - padding * 2 - equipH - gap;
+  drawInventoryBackpack(innerX, bagY, innerW, bagH);
+
+  ctx.restore();
+}
+
+function drawInventorySection(x, y, w, h, title) {
+  ctx.save();
+
+  // Title
+  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.font = "15px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText(title, x + 4, y - 20);
+
+  // Box
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  roundRect(ctx, x, y, w, h, 10);
+  ctx.fill();
+
+  // Equipment slots (5 columns)
+  const cols = 5;
+  const size = 56;
+  const gap = 10;
+  const startX = x + (w - (cols * size + (cols - 1) * gap)) / 2;
+  const sy = y + 22;
+
+  for (let i = 0; i < cols; i++) {
+    const sx = startX + i * (size + gap);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, sx, sy, size, size, 8);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawInventoryBackpack(x, y, w, h) {
+  ctx.save();
+
+  // Title
+  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.font = "15px system-ui, -apple-system, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText("背包", x + 4, y - 20);
+
+  // Box
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  roundRect(ctx, x, y, w, h, 10);
+  ctx.fill();
+
+  // Grid (5 columns)
+  const cols = 5;
+  const size = 56;
+  const gap = 10;
+  const rows = Math.max(1, Math.floor((h - 24) / (size + gap)));
+
+  const gridW = cols * size + (cols - 1) * gap;
+  const startX = x + (w - gridW) / 2;
+  let sy = y + 20;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const sx = startX + c * (size + gap);
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, sx, sy, size, size, 8);
+      ctx.stroke();
+    }
+    sy += size + gap;
+  }
 
   ctx.restore();
 }
