@@ -804,7 +804,7 @@ function drawInventoryLeftPanel() {
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
 
-  // ===== 左側統一背景（只框住 裝備+背包；到背包最後一排就停止） =====
+  // ===== 背包下方新增 6 格區域（橫向） =====
   const headerH = 28;
   const size = 54;
   const gapSlot = 6;
@@ -817,18 +817,54 @@ function drawInventoryLeftPanel() {
   // 背包區「從 bagY 開始」到最後一排格子底部的高度
   const backpackContentH = backpackTopPad + backpackGridOnlyH;
 
-  // left 背景高度 = 從 innerY 到 bagY（含裝備+gap） + 背包內容高度 + 一點點 padding
-  const leftBgH = (bagY - innerY) + backpackContentH + 4;
+  // 新增 6 格區域參數
+  const bottomGap = 12;
+  const bottomY = bagY + backpackContentH + bottomGap;
+  const bottomPad = 10;
+  const bottomSlot = 48;
+  const bottomSlotGap = 6;
+  const bottomCols = 6;
+  const bottomGridW = bottomCols * bottomSlot + (bottomCols - 1) * bottomSlotGap;
+  const bottomH = bottomPad * 2 + bottomSlot;
 
+  // left 背景高度：框到「新增區域」底部
+  const leftBgH = (bottomY - innerY) + bottomH + 4;
+
+  // 統一背景先畫（避免蓋到格子）
   ctx.save();
   ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
   roundRect(ctx, innerX, innerY, leftW, leftBgH, 14);
   ctx.fill();
   ctx.restore();
 
+  // 內容再畫
   drawInventorySection(innerX, innerY, leftW, equipH, "裝備");
   drawInventoryRightColumn(rightX, innerY, rightColW, equipH);
   drawInventoryBackpack(innerX, bagY, leftW, bagH);
+
+  // 新增區域背景（跟左邊一致，圓角）
+  ctx.save();
+  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+  roundRect(ctx, innerX, bottomY, leftW, bottomH, 14);
+  ctx.fill();
+
+  // 6 個格子（橫向）
+  const startX2 = innerX + (leftW - bottomGridW) / 2;
+  const sy2 = bottomY + bottomPad;
+
+  for (let c = 0; c < bottomCols; c++) {
+    const sx2 = startX2 + c * (bottomSlot + bottomSlotGap);
+    ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
+    roundRect(ctx, sx2, sy2, bottomSlot, bottomSlot, 14);
+    ctx.fill();
+
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, sx2 + 0.5, sy2 + 0.5, bottomSlot - 1, bottomSlot - 1, 14);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 
   ctx.restore();
 }
@@ -860,7 +896,7 @@ function drawInventoryRightColumn(x, y, w, equipH) {
     roundRect(ctx, slotX, sy, slotW, slotH, 14);
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+    ctx.strokeStyle = "#FFFFFF";
     ctx.lineWidth = 1.5;
     roundRect(ctx, slotX + 0.5, sy + 0.5, slotW - 1, slotH - 1, 14);
     ctx.stroke();
@@ -925,7 +961,7 @@ function drawInventorySection(x, y, w, h, title) {
       roundRect(ctx, sx, sy, size, size, 14);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.strokeStyle = "#FFFFFF";
       ctx.lineWidth = 1.5;
       roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 14);
       ctx.stroke();
@@ -979,7 +1015,7 @@ function drawInventoryBackpack(x, y, w, h) {
       roundRect(ctx, sx, sy, size, size, 14);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+      ctx.strokeStyle = "#FFFFFF";
       ctx.lineWidth = 1.5;
       roundRect(ctx, sx + 0.5, sy + 0.5, size - 1, size - 1, 14);
       ctx.stroke();
