@@ -891,7 +891,7 @@ function drawInventorySection(x, y, w, h, title) {
   roundRect(ctx, x + 8, y + 8, w - 16, headerH, 12);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.fillStyle = "#FFFFFF";
   ctx.font = "15px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
   ctx.fillText(title, x + 18, y + 8 + headerH / 2);
@@ -933,7 +933,7 @@ function drawInventorySection(x, y, w, h, title) {
       // 文字（格子正下方）
       const text = labels[labelIndex++] ?? "";
       if (text) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+        ctx.fillStyle = "#FFFFFF";
         ctx.font = "12px system-ui, -apple-system, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
@@ -957,7 +957,7 @@ function drawInventoryBackpack(x, y, w, h) {
   roundRect(ctx, x + 8, y + 8, w - 16, headerH, 12);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.fillStyle = "#FFFFFF";
   ctx.font = "15px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
   ctx.fillText("背包", x + 18, y + 8 + headerH / 2);
