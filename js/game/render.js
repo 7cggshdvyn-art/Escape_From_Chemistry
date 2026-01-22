@@ -817,9 +817,7 @@ function drawInventoryLeftPanel() {
   // 背包區「從 bagY 開始」到最後一排格子底部的高度
   const backpackContentH = backpackTopPad + backpackGridOnlyH;
 
-  // 新增 6 格區域參數
-  const bottomGap = 12;
-  const bottomY = bagY + backpackContentH + bottomGap;
+  // ===== 新增 6 格區域（固定貼在面板底部：螢幕下面） =====
   const bottomPad = 10;
   const bottomSlot = 48;
   const bottomSlotGap = 6;
@@ -827,8 +825,11 @@ function drawInventoryLeftPanel() {
   const bottomGridW = bottomCols * bottomSlot + (bottomCols - 1) * bottomSlotGap;
   const bottomH = bottomPad * 2 + bottomSlot;
 
-  // left 背景高度：框到「新增區域」底部
-  const leftBgH = (bottomY - innerY) + bottomH + 4;
+  // 位置：貼齊左側面板底部（保留 padding）
+  const bottomY = panelY + panelH - padding - bottomH;
+
+  // left 統一背景高度：只框到背包 5x5 最後一排（不要延伸到面板底部）
+  const leftBgH = (bagY - innerY) + backpackContentH + 4;
 
   // 統一背景先畫（避免蓋到格子）
   ctx.save();
@@ -1006,7 +1007,7 @@ function drawInventoryBackpack(x, y, w, h) {
 
   const gridW = cols * size + (cols - 1) * gap;
   const startX = x + (w - gridW) / 2;
-  let sy = y + 8 + headerH + 12;
+  let sy = y + 8 +   headerH + 12;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
