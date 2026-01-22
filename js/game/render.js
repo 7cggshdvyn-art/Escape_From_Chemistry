@@ -804,15 +804,22 @@ function drawInventoryLeftPanel() {
   const bagY = innerY + equipH + gap;
   const bagH = panelH - padding * 2 - equipH - gap;
 
-  // ===== 左側深藍背景（只到背包最後一排） =====
-  // 只包裝備 + 背包區（高度之後算）
+  // ===== 左側統一背景（只框住 裝備+背包；到背包最後一排就停止） =====
   const headerH = 28;
   const size = 54;
   const gapSlot = 6;
   const rows = 5;
-  // 背包格子實際高度
-  const backpackGridH = headerH + 12 + rows * size + (rows - 1) * gapSlot;
-  const leftBgH = (bagY - innerY) + backpackGridH + 6; // 只多一點點 padding
+
+  // drawInventoryBackpack 內的格子起點：y + 8 + headerH + 12
+  const backpackTopPad = 8 + headerH + 12;
+  const backpackGridOnlyH = rows * size + (rows - 1) * gapSlot;
+
+  // 背包區「從 bagY 開始」到最後一排格子底部的高度
+  const backpackContentH = backpackTopPad + backpackGridOnlyH;
+
+  // left 背景高度 = 從 innerY 到 bagY（含裝備+gap） + 背包內容高度 + 一點點 padding
+  const leftBgH = (bagY - innerY) + backpackContentH + 4;
+
   ctx.save();
   ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
   roundRect(ctx, innerX, innerY, leftW, leftBgH, 14);
@@ -877,17 +884,6 @@ function drawInventoryRightColumn(x, y, w, equipH) {
 
 function drawInventorySection(x, y, w, h, title) {
   ctx.save();
-
-  // Box（深藍，統一色）
-  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
-  roundRect(ctx, x, y, w, h, 14);
-  ctx.fill();
-
-  // Box border
-  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
-  ctx.lineWidth = 2;
-  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 14);
-  ctx.stroke();
 
   // Header（預留文字區）
   const headerH = 28;
@@ -954,17 +950,6 @@ function drawInventorySection(x, y, w, h, title) {
 
 function drawInventoryBackpack(x, y, w, h) {
   ctx.save();
-
-  // Box（背包區：與裝備區完全一致）
-  ctx.fillStyle = "rgba(30, 70, 115, 0.65)";
-  roundRect(ctx, x, y, w, h, 14);
-  ctx.fill();
-
-  // Box border（與裝備區完全一致）
-  ctx.strokeStyle = "rgba(180, 230, 255, 0.22)";
-  ctx.lineWidth = 2;
-  roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 14);
-  ctx.stroke();
 
   // Header（預留文字區）
   const headerH = 28;
