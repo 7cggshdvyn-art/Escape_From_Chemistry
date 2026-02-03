@@ -1,4 +1,4 @@
-// @Aaron 堆叠用stack
+// Aaron, 堆叠用stack
 const food = [
   {
     id: "cola",
